@@ -81,6 +81,8 @@ Redes/
 ### ludo_game.py
 - Versión básica del juego
 - Usa la imagen del tablero proporcionada
+- Todo feo
+- Nada tiene sentido
 
 ### ludo_game_improved.py
 - Versión mejorada con tablero generado programáticamente
@@ -90,6 +92,7 @@ Redes/
 - Sistema de pausas
 - Animaciones más fluidas
 
+
 ## Solución de problemas
 
 Si el juego no muestra las imágenes correctamente:
@@ -97,6 +100,15 @@ Si el juego no muestra las imágenes correctamente:
 2. Verifica que todos los archivos de imagen estén presentes
 3. El juego creará gráficos alternativos si no puede cargar las imágenes
 
+## Por Hacer
+1. Por donde sale la ficha y donde se mueve
+2. Todo lo que tiene que ver con redes
+3. Sistema de comer, puntos y paranoias
+4. Basicamente todo el proyecto
+5. Mas cosas
+
+
 ## Créditos
 
 Desarrollado como un juego educativo de Ludo usando Python y Pygame. 
+Empezado por Daniel Castellanos (mentira)
