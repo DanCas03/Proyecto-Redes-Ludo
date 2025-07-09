@@ -160,6 +160,63 @@ class Board:
         c.create_polygon(cx, cy, 9*cell, 6*cell, 9*cell, 9*cell, fill=COLOR_MAP['yellow'], outline="black", tags="board")
         # Triángulo azul (abajo derecha)
         c.create_polygon(cx, cy, 9*cell, 9*cell, 6*cell, 9*cell, fill=COLOR_MAP['blue'], outline="black", tags="board")
+        
+        # Agregar números a las casillas del recorrido principal
+        # Mostrar números absolutos del recorrido (1-52)
+        for i, (row, col) in enumerate(self.main_path):
+            x = col * cell + cell/2
+            y = row * cell + cell/2
+            # Número más pequeño para no interferir con las fichas
+            c.create_text(x, y+cell/3, text=str(i+1), font=("Arial", 8), fill="gray", tags="board")
+        
+        # Agregar números/letras a los pasillos finales
+        for color, positions in self.home_paths.items():
+            text_color = "white" if color != 'yellow' else "black"
+            for i, (row, col) in enumerate(positions):
+                x = col * cell + cell/2
+                y = row * cell + cell/2
+                # Usar letras para diferenciar los pasillos finales
+                c.create_text(x, y, text=f"{color[0].upper()}{i+1}", font=("Arial", 9, "bold"), fill=text_color, tags="board")
+        
+        # Marcar las casillas de salida con una estrella
+        salidas = {
+            'red': (6, 1),
+            'green': (1, 8),
+            'yellow': (8, 13),
+            'blue': (13, 6)
+        }
+        for color, (row, col) in salidas.items():
+            x = col * cell + cell/2
+            y = row * cell + cell/2
+            c.create_text(x, y-10, text="★", font=("Arial", 14, "bold"), fill="gold", tags="board")
+
+    def draw_player_path_numbers(self, player_color):
+        """Dibuja números relativos al recorrido del jugador especificado"""
+        if not player_color or player_color not in self.start_offsets:
+            return
+            
+        c = self.canvas
+        cell = self.cell_size
+        c.delete("path_numbers")
+        
+        # Offset del color para calcular posiciones relativas
+        offset = self.start_offsets[player_color]
+        
+        # Dibujar números del recorrido principal desde la perspectiva del jugador
+        for i in range(52):
+            # Posición absoluta en el tablero
+            abs_pos = (i + offset) % 52
+            row, col = self.main_path[abs_pos]
+            x = col * cell + cell/2
+            y = row * cell + cell/2 - cell/4
+            
+            # Resaltar la casilla de salida del jugador
+            if i == 0:
+                c.create_oval(x-15, y-5, x+15, y+15, fill="", outline=COLOR_MAP[player_color], width=3, tags="path_numbers")
+            
+            # Mostrar número relativo (1-52) en posición superior
+            text_color = COLOR_MAP[player_color] if i == 0 else "darkblue"
+            c.create_text(x, y, text=str(i+1), font=("Arial", 10, "bold"), fill=text_color, tags="path_numbers")
 
     def get_canvas_coords_from_grid(self, row, col):
         cell = self.cell_size
@@ -240,6 +297,10 @@ class GameWindow:
         self.board.draw_board()
         self.draw_all_pieces()
         self.canvas.bind("<Button-1>", self.on_canvas_click)
+        
+        # Información adicional del jugador
+        self.color_label = tk.Label(main_frame, text="Color: -", font=("Arial", 12))
+        self.color_label.grid(row=3, column=1, padx=20, pady=5, sticky="w")
 
         # Panel de estado
         self.status_label = tk.Label(main_frame, text="Esperando jugadores...", font=("Arial", 14))
@@ -350,9 +411,19 @@ class GameWindow:
 
     def update_gui(self):
         # Actualiza el tablero y los textos
+        self.board.draw_board()  # Redibujar el tablero completo
+        if self.my_color:
+            self.board.draw_player_path_numbers(self.my_color)  # Mostrar números desde la perspectiva del jugador
         self.draw_all_pieces()
+        
+        # Actualizar información del color del jugador
+        if self.my_color:
+            self.root.title(f"Ludo - Jugador: {self.username} ({self.my_color.capitalize()})")
+            self.color_label.config(text=f"Color: {self.my_color.capitalize()}", fg=COLOR_MAP[self.my_color])
+        
         self.dice_label.config(text=f"Dado: {self.last_dice_roll if self.last_dice_roll is not None else '-'}")
         self.status_label.config(text=self.message)
+        
         # Habilita/deshabilita el botón de dado según el turno
         if self.current_turn == self.username:
             self.btn_dice.config(state=tk.NORMAL)
