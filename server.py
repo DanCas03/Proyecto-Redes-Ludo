@@ -19,16 +19,16 @@ START_POSITIONS = {
     'blue': 39
 }
 
-# Casillas de entrada al pasillo final para cada color
+# Casillas de entrada al pasillo final para cada color (actualizadas para 49 casillas)
 HOME_ENTRY = {
-    'red': 51,
-    'green': 12,
-    'yellow': 25,
-    'blue': 38
+    'red': 48,   # Cerca del final del recorrido
+    'green': 12, # Después de bajar por el lado derecho
+    'yellow': 25, # Después del lado derecho
+    'blue': 35   # En el lado izquierdo
 }
 
 # Longitud del recorrido principal y del pasillo final
-MAIN_PATH_LEN = 52
+MAIN_PATH_LEN = 49  # Actualizado para usar solo casillas "path" válidas
 HOME_PATH_LEN = 6
 
 USERS_FILE = 'users.json'
@@ -51,21 +51,36 @@ board_ids = [
     ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","start_blue","home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
     ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "path",      "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"]
 ]
-# main_path igual que en el cliente
+# main_path actualizado - solo casillas "path" válidas (igual que en el cliente)
 main_path = [
-    (6,1),(5,6),(4,6),(3,6),(2,6),(1,6), # Rojo sube
-    (0,6),(0,7),(0,8),(1,8),(2,8),(3,8),(4,8),(5,8), # Verde derecha y baja
-    (6,9),(6,10),(6,11),(6,12),(6,13),(7,13), # Amarillo baja
-    (8,13),(8,12),(8,11),(8,10),(8,9),(8,8),(8,7), # Amarillo izquierda
-    (8,6),(9,6),(10,6),(11,6),(12,6),(13,6), # Azul sube
-    (14,6),(14,7),(14,8),(13,8),(12,8),(11,8),(10,8),(9,8), # Azul derecha y sube
-    (8,9),(7,9),(6,9),(5,9),(4,9),(3,9),(2,9),(1,9),(0,9),(0,8),(0,7),(0,6) # Completa el ciclo
+    # Iniciando desde arriba y siguiendo sentido horario (49 casillas válidas)
+    (5, 6), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 7), (0, 8),
+    # Bajando por el lado derecho
+    (1, 8), (2, 8), (3, 8), (4, 8), (5, 8),
+    # Continuamos hacia la derecha (no hay (6,8) porque es meta_tri)
+    (6, 9), (6, 10), (6, 11), (6, 12), (6, 13), (6, 14),
+    # Bajamos por el extremo derecho
+    (7, 14), (8, 14),
+    # Hacia la izquierda por la parte inferior (saltando (8,13) que no es path)
+    (8, 12), (8, 11), (8, 10), (8, 9),
+    # Bajamos por el medio
+    (9, 8), (10, 8), (11, 8), (12, 8), (13, 8),
+    # Continuamos hacia la izquierda por la parte inferior
+    (14, 8), (14, 7), (14, 6),
+    # Subimos por el lado izquierdo (saltando (13,6) que no es path)
+    (12, 6), (11, 6), (10, 6), (9, 6),
+    # Continuamos hacia la izquierda por el medio
+    (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (8, 0),
+    # Subimos por el extremo izquierdo
+    (7, 0), (6, 0),
+    # Completamos el ciclo hacia la derecha (saltando (6,1) que no es path)
+    (6, 2), (6, 3), (6, 4), (6, 5)
 ]
 
 def is_path_square(position, color):
     # Calcula la posición absoluta en el recorrido principal
-    start_offsets = {'red': 0, 'green': 13, 'yellow': 26, 'blue': 39}
-    abs_index = (position + start_offsets[color]) % 52
+    start_offsets = {'red': 0, 'green': 8, 'yellow': 25, 'blue': 35}  # Offsets actualizados
+    abs_index = (position + start_offsets[color]) % MAIN_PATH_LEN
     row, col = main_path[abs_index]
     return board_ids[row][col] == "path"
 

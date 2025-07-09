@@ -37,12 +37,16 @@ class Board:
         self.main_path = self._define_main_path()
         self.home_paths = self._define_home_paths()
         self.base_coords = self._define_base_coords()
+        # Calcular offsets basados en las posiciones de salida en el nuevo recorrido
+        # Buscar las posiciones más cercanas a las casillas de salida en el recorrido
         self.start_offsets = {
-            'red': 0,    # (6,1)
-            'green': 13, # (1,8)
-            'yellow': 26,# (8,13)
-            'blue': 39   # (13,6)
+            'red': 0,     # Inicia cerca de (6,5) - final del recorrido
+            'green': 8,   # Cerca de (1,8) - posición 8 en el recorrido  
+            'yellow': 25, # Cerca de (9,8) - después del lado derecho
+            'blue': 35    # Cerca de (12,6) - en el lado izquierdo
         }
+        # Verificación durante desarrollo (comentar cuando esté listo)
+        # self.debug_path_verification()
 
     def _create_grid(self):
         # Matriz fija según la estructura exacta del tablero
@@ -66,25 +70,64 @@ class Board:
         return board_ids
 
     def _define_main_path(self):
-        # Camino blanco, sentido horario, iniciando en la salida de rojo (6,1)
-        path = []
-        # 1. Rojo sube
-        for i in range(6, 0, -1): path.append((i, 6))         # (6,6) a (1,6)
-        # 2. Rojo a la derecha
-        for i in range(6, 13): path.append((0, i))            # (0,6) a (0,12)
-        # 3. Verde baja
-        for i in range(1, 6): path.append((i, 12))            # (1,12) a (5,12)
-        # 4. Verde a la derecha
-        for i in range(12, 8, -1): path.append((6, i))        # (6,12) a (6,9)
-        # 5. Amarillo baja
-        for i in range(7, 13): path.append((i, 8))            # (7,8) a (12,8)
-        # 6. Amarillo a la izquierda
-        for i in range(9, 0, -1): path.append((13, i))        # (13,9) a (13,1)
-        # 7. Azul sube
-        for i in range(12, 6, -1): path.append((i, 0))        # (12,0) a (7,0)
-        # 8. Azul a la derecha
-        for i in range(1, 6): path.append((6, i))             # (6,1) a (6,5)
-        return path[:52]
+        """Define el recorrido principal siguiendo SOLO las casillas 'path' (blancas)"""
+        # Basado en la verificación anterior, estas son las casillas marcadas como "path":
+        all_path_cells = [
+            (0,6), (0,7), (0,8),
+            (1,6), (1,8),
+            (2,6), (2,8),
+            (3,6), (3,8),
+            (4,6), (4,8),
+            (5,6), (5,8),
+            (6,0), (6,2), (6,3), (6,4), (6,5), (6,9), (6,10), (6,11), (6,12), (6,13), (6,14),
+            (7,0), (7,14),
+            (8,0), (8,1), (8,2), (8,3), (8,4), (8,5), (8,9), (8,10), (8,11), (8,12), (8,14),
+            (9,6), (9,8),
+            (10,6), (10,8),
+            (11,6), (11,8),
+            (12,6), (12,8),
+            (13,8),
+            (14,6), (14,7), (14,8)
+        ]
+        
+        # Crear un recorrido continuo en sentido horario usando TODAS las casillas "path"
+        # Recorrido corregido para evitar saltos y usar todas las casillas disponibles
+        path = [
+            # Iniciando desde arriba y siguiendo sentido horario
+            (5, 6), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 7), (0, 8),
+            # Bajando por el lado derecho
+            (1, 8), (2, 8), (3, 8), (4, 8), (5, 8),
+            # Continuamos hacia la derecha (no hay (6,8) porque es meta_tri)
+            (6, 9), (6, 10), (6, 11), (6, 12), (6, 13), (6, 14),
+            # Bajamos por el extremo derecho
+            (7, 14), (8, 14),
+            # Hacia la izquierda por la parte inferior (saltando (8,13) que no es path)
+            (8, 12), (8, 11), (8, 10), (8, 9),
+            # Bajamos por el medio
+            (9, 8), (10, 8), (11, 8), (12, 8), (13, 8),
+            # Continuamos hacia la izquierda por la parte inferior
+            (14, 8), (14, 7), (14, 6),
+            # Subimos por el lado izquierdo (saltando (13,6) que no es path)
+            (12, 6), (11, 6), (10, 6), (9, 6),
+            # Continuamos hacia la izquierda por el medio
+            (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (8, 0),
+            # Subimos por el extremo izquierdo
+            (7, 0), (6, 0),
+            # Completamos el ciclo hacia la derecha (saltando (6,1) que no es path)
+            (6, 2), (6, 3), (6, 4), (6, 5)
+        ]
+        
+        # Verificar que todas las casillas sean "path" válidas
+        grid = self._create_grid()
+        verified_path = []
+        for row, col in path:
+            if grid[row][col] == "path":
+                verified_path.append((row, col))
+            else:
+                print(f"ERROR: Casilla ({row},{col}) no es 'path', es '{grid[row][col]}'")
+        
+        print(f"Recorrido verificado: {len(verified_path)} casillas válidas")
+        return verified_path
 
     def _define_home_paths(self):
         return {
@@ -106,6 +149,33 @@ class Board:
         """Devuelve True si la casilla es transitable para fichas (solo 'path')."""
         tipo = self.grid[row][col]
         return tipo == "path"
+    
+    def debug_path_verification(self):
+        """Método de depuración para verificar el recorrido"""
+        print("=== VERIFICACIÓN DEL RECORRIDO ===")
+        print("Matriz del tablero (solo casillas 'path'):")
+        for row in range(15):
+            for col in range(15):
+                if self.grid[row][col] == "path":
+                    print(f"  ({row},{col}) = path")
+        
+        print(f"\nRecorrido definido ({len(self.main_path)} casillas):")
+        for i, (row, col) in enumerate(self.main_path):
+            tipo = self.grid[row][col]
+            status = "✓" if tipo == "path" else "✗"
+            print(f"  {i+1}: ({row},{col}) = {tipo} {status}")
+        
+        # Verificar continuidad del recorrido
+        print("\nVerificando continuidad:")
+        for i in range(len(self.main_path)):
+            current = self.main_path[i]
+            next_pos = self.main_path[(i + 1) % len(self.main_path)]
+            distance = abs(current[0] - next_pos[0]) + abs(current[1] - next_pos[1])
+            if distance != 1:
+                print(f"  PROBLEMA: Salto de {current} a {next_pos} (distancia {distance})")
+            else:
+                print(f"  OK: {current} -> {next_pos}")
+        print("=== FIN VERIFICACIÓN ===\n")
 
     def draw_board(self):
         c = self.canvas
@@ -203,9 +273,9 @@ class Board:
         offset = self.start_offsets[player_color]
         
         # Dibujar números del recorrido principal desde la perspectiva del jugador
-        for i in range(52):
+        for i in range(len(self.main_path)):
             # Posición absoluta en el tablero
-            abs_pos = (i + offset) % 52
+            abs_pos = (i + offset) % len(self.main_path)
             row, col = self.main_path[abs_pos]
             x = col * cell + cell/2
             y = row * cell + cell/2 - cell/4
@@ -253,8 +323,8 @@ class Board:
             else:
                 return (7.5*self.cell_size, 7.5*self.cell_size)
         # 4. Camino principal
-        if 0 < position <= 51:
-            abs_index = (position + self.start_offsets[color]) % 52
+        if 0 < position < len(self.main_path):
+            abs_index = (position + self.start_offsets[color]) % len(self.main_path)
             row, col = self.main_path[abs_index]
             return self.get_canvas_coords_from_grid(row, col)
         # 5. Meta
