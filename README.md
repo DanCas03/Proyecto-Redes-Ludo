@@ -1,114 +1,160 @@
-# Juego de Ludo Interactivo
+# Ludo en Red - Proyecto Interactivo
 
-Un juego de Ludo (Parchís) interactivo desarrollado en Python usando Pygame.
+Este proyecto implementa el juego de Ludo (Parchís) en red usando Python, con arquitectura cliente-servidor y control administrativo. Permite partidas de 2 a 4 jugadores, con reglas oficiales y una interfaz gráfica profesional.
 
-## Características
+---
 
-- **Multijugador local**: Soporta de 2 a 4 jugadores
-- **Modo contra IA**: Juega contra oponentes controlados por computadora
-- **Interfaz gráfica**: Interfaz intuitiva y fácil de usar con tablero programático mejorado
-- **Animaciones**: Dado animado y efectos visuales
-- **Reglas completas**: Implementa todas las reglas tradicionales del Ludo
-- **Gráficos personalizados**: Usa las imágenes proporcionadas en la carpeta Icons
-- **Sistema de pausas**: Presiona ESC para pausar en cualquier momento
-- **Casillas seguras**: Marcadas con estrellas donde las fichas no pueden ser capturadas
-- **Indicadores visuales**: Las fichas que pueden moverse se resaltan con animación
-- **Mensajes informativos**: Notificaciones en pantalla sobre eventos del juego
+## Arquitectura General y Archivos Principales
 
-## Requisitos
+### 1. **admin_gui.py**
+- Es la interfaz gráfica de administración del servidor.
+- Permite al admin elegir IP y puerto, iniciar/detener el servidor, ver usuarios registrados, conectados y autenticados.
+- Controla el inicio y fin de la partida.
+- Se comunica directamente con `server.py` (importa y controla la clase `LudoServer`).
+- Actualiza en tiempo real la lista de usuarios y el estado del juego.
 
-- Python 3.6 o superior
-- Pygame 2.5.2
+### 2. **server.py**
+- Contiene toda la lógica del servidor y del juego.
+- Clases principales:
+  - **LudoServer**: Maneja conexiones TCP, usuarios, turnos, y la lógica de red.
+  - **Board, Piece, Player**: Representan el estado del tablero, fichas y jugadores.
+  - **Funciones de red**: Envío y recepción de mensajes JSON por socket.
+- El servidor solo inicia el socket cuando el admin lo decide desde la GUI.
+- Gestiona la autenticación, el flujo de turnos, el movimiento de fichas, reglas de Ludo, y la comunicación con todos los clientes conectados.
 
-## Instalación
+### 3. **client.py**
+- Es la aplicación gráfica para los jugadores.
+- Permite login y registro, conexión al servidor, y muestra el tablero y fichas en tiempo real.
+- Recibe actualizaciones del servidor y permite lanzar el dado y mover fichas solo cuando es el turno del jugador.
+- Toda la lógica de validación de movimientos y reglas se centraliza en el servidor, el cliente solo envía comandos y muestra el estado.
 
-1. Instala las dependencias:
-```bash
-pip install -r requirements.txt
+### 4. **users.json**
+- Base de datos persistente de usuarios registrados (login, clave, nombre, apellido).
+
+### 5. **Icons/**
+- Carpeta con imágenes de fichas, dados y tablero para la interfaz gráfica.
+
+---
+
+## Flujo de Corrida del Proyecto (de principio a fin)
+
+### 1. **Arranque del servidor (admin)**
+- El admin ejecuta `python admin_gui.py`.
+- En la GUI, elige IP y puerto y presiona "Iniciar Servidor".
+- El servidor (`LudoServer`) crea el socket y comienza a aceptar conexiones de clientes.
+- El admin puede agregar usuarios o esperar a que los jugadores se registren desde el cliente.
+
+### 2. **Conexión de los clientes**
+- Cada jugador ejecuta `python client.py`.
+- En la ventana de login, ingresa la IP y puerto del servidor, usuario y clave (o se registra).
+- El cliente se conecta al servidor y, si las credenciales son correctas, queda autenticado y visible en la GUI del admin.
+
+### 3. **Inicio de la partida**
+- Cuando hay entre 2 y 4 jugadores autenticados, el admin presiona "Iniciar Partida".
+- El servidor asigna colores, inicializa el tablero y notifica a todos los clientes el inicio.
+
+### 4. **Desarrollo del juego**
+- El servidor gestiona el turno de cada jugador y envía el estado actualizado a todos los clientes.
+- Solo el jugador cuyo turno es puede lanzar el dado y mover fichas.
+- El cliente envía comandos de lanzar dado o mover ficha, el servidor valida y actualiza el estado.
+- Se aplican todas las reglas de Ludo: salidas con 6, bloqueos, casillas seguras, pasillos finales, tres 6 seguidos, etc.
+- El tablero y las fichas se actualizan en tiempo real en todos los clientes.
+
+### 5. **Fin de la partida**
+- Cuando un jugador lleva todas sus fichas a la meta, el servidor notifica el final y el ganador a todos los clientes.
+- El admin puede detener la partida o reiniciar el servidor para una nueva ronda.
+
+---
+
+## Diagrama de Flujo (texto)
+
+```
+[Admin abre admin_gui.py]
+      |
+      v
+[Elige IP/puerto y presiona 'Iniciar Servidor']
+      |
+      v
+[Servidor escucha conexiones]
+      |
+      v
+[Jugadores abren client.py y se conectan]
+      |
+      v
+[Login/Registro exitoso]
+      |
+      v
+[Admin ve usuarios conectados]
+      |
+      v
+[Admin presiona 'Iniciar Partida']
+      |
+      v
+[Servidor asigna colores y notifica inicio]
+      |
+      v
+[Turnos: cada jugador lanza dado y mueve]
+      |
+      v
+[Servidor valida movimientos y actualiza estado]
+      |
+      v
+[Se repite hasta que alguien gana]
+      |
+      v
+[Servidor notifica ganador y fin de partida]
 ```
 
-## Cómo jugar
+---
 
-1. Ejecuta el juego (recomendado usar la versión mejorada):
-```bash
-python ludo_game_improved.py
-```
+## Explicación Técnica Detallada
 
-O si prefieres la versión básica:
-```bash
-python ludo_game.py
-```
+### **admin_gui.py**
+- Usa Tkinter para la interfaz.
+- Permite elegir IP/puerto y controlar el ciclo de vida del servidor.
+- Llama a `LudoServer(host, port)` y a `start_in_thread()` solo cuando el admin lo decide.
+- Actualiza en tiempo real la lista de usuarios conectados y autenticados.
+- Permite agregar/borrar usuarios y ver estadísticas del servidor.
 
-2. En el menú principal, selecciona el número de jugadores (2-4)
+### **server.py**
+- El servidor es multihilo: cada cliente se atiende en un hilo separado.
+- El método `accept_clients` acepta conexiones y lanza un hilo por cliente.
+- El método `handle_client` procesa los comandos de cada cliente (login, registro, lanzar dado, mover ficha).
+- Toda la lógica de reglas de Ludo está centralizada aquí:
+  - Validación de movimientos, bloqueos, capturas, casillas seguras, pasillos finales, tres 6 seguidos, etc.
+  - El servidor mantiene el estado global del tablero y de los turnos.
+  - Envía actualizaciones a todos los clientes tras cada acción.
+- El servidor solo inicia el socket cuando el admin lo decide, evitando conflictos de puerto.
 
-3. **Reglas del juego**:
-   - Cada jugador tiene 4 fichas que deben llegar desde su casa hasta el centro del tablero
-   - Para sacar una ficha de casa, debes sacar un 6 en el dado
-   - Si sacas un 6, puedes tirar el dado nuevamente
-   - Puedes capturar las fichas de otros jugadores si caes en la misma casilla
-   - Las casillas con estrellas son zonas seguras donde no puedes ser capturado
-   - El primer jugador en llevar todas sus fichas al centro gana
+### **client.py**
+- Usa Tkinter para la interfaz gráfica del jugador.
+- Permite login y registro, y muestra el tablero y fichas en tiempo real.
+- Solo permite lanzar el dado y mover fichas cuando es el turno del jugador.
+- Recibe actualizaciones del servidor y actualiza la GUI automáticamente.
+- El cliente es "tonto": toda la lógica de reglas y validación está en el servidor.
 
-4. **Controles**:
-   - Click en el botón "Tirar Dado" o presiona Espacio para lanzar el dado
-   - Click en una ficha resaltada para moverla
-   - Presiona ESC para pausar el juego
+### **users.json**
+- Archivo JSON que almacena los usuarios registrados de forma persistente.
+- Se actualiza automáticamente al registrar o borrar usuarios.
 
-## Estructura del proyecto
+### **Icons/**
+- Carpeta con imágenes PNG para el tablero, fichas y dados.
+- El cliente y el admin las usan para mostrar la interfaz gráfica.
 
-```
-Redes/
-├── ludo_game.py           # Versión básica del juego
-├── ludo_game_improved.py  # Versión mejorada con tablero programático
-├── requirements.txt       # Dependencias del proyecto
-├── README.md             # Este archivo
-└── Icons/                # Carpeta con los recursos gráficos
-    ├── Ludo_board.svg.png
-    ├── Ficha Roja.png
-    ├── Ficha Verde.png
-    ├── Ficha Azul.png
-    ├── Ficha Amarilla.png
-    ├── dado-uno.png
-    ├── dados-dos.png
-    ├── dados-tres.png
-    ├── dados-cuatro.png
-    ├── dado.png
-    └── dados-seis.png
-```
+---
 
-## Versiones del juego
+## Consejos y solución de problemas
 
-### ludo_game.py
-- Versión básica del juego
-- Usa la imagen del tablero proporcionada
-- Todo feo
-- Nada tiene sentido
+- **El cliente se queda esperando:**
+  - Asegúrate de que el admin haya iniciado el servidor y que la IP/puerto coincidan.
+  - Verifica que el firewall no bloquee Python.
+- **No se ven imágenes:**
+  - Verifica que la carpeta `Icons` esté en el mismo directorio y contenga todos los archivos.
+- **Puerto ocupado:**
+  - Cambia el puerto en la GUI del admin y en los clientes.
 
-### ludo_game_improved.py
-- Versión mejorada con tablero generado programáticamente
-- Mejor alineación de fichas con las casillas
-- Incluye modo contra IA
-- Efectos visuales mejorados
-- Sistema de pausas
-- Animaciones más fluidas
-
-
-## Solución de problemas
-
-Si el juego no muestra las imágenes correctamente:
-1. Asegúrate de que la carpeta `Icons` esté en el mismo directorio que `ludo_game.py`
-2. Verifica que todos los archivos de imagen estén presentes
-3. El juego creará gráficos alternativos si no puede cargar las imágenes
-
-## Por Hacer
-1. Por donde sale la ficha y donde se mueve
-2. Todo lo que tiene que ver con redes
-3. Sistema de comer, puntos y paranoias
-4. Basicamente todo el proyecto
-5. Mas cosas
-
+---
 
 ## Créditos
 
-Desarrollado como un juego educativo de Ludo usando Python y Pygame. 
-Empezado por Daniel Castellanos (mentira)
+Desarrollado como proyecto de redes y programación en Python. Arquitectura y reglas adaptadas para cumplir con los requisitos académicos y de juego profesional.
