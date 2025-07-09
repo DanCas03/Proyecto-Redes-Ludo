@@ -68,106 +68,128 @@ HOME_POSITIONS = {
     ]
 }
 
-# Zonas seguras (casillas con estrella)
-SAFE_POSITIONS = [0, 8, 13, 21, 26, 34, 39, 47]
+# Zonas seguras (casillas con estrella) - actualizadas según el tablero
+SAFE_POSITIONS = [1, 9, 14, 22, 27, 35, 40, 48, 53, 61, 66, 68]  # Posiciones donde están las estrellas
+
+# Posiciones de inicio en el camino principal (casillas de salida)
+START_POSITIONS = {
+    "yellow": 5,   # Sale por la casilla 5
+    "blue": 22,    # Sale por la casilla 22
+    "red": 39,     # Sale por la casilla 39
+    "green": 56    # Sale por la casilla 56
+}
+
+# Posiciones de entrada a las columnas de color (un paso antes de entrar)
+HOME_ENTRANCE_POSITIONS = {
+    "yellow": 68,   # Entra a la columna amarilla después de la casilla 68
+    "blue": 17,     # Entra a la columna azul después de la casilla 17
+    "red": 34,      # Entra a la columna roja después de la casilla 34
+    "green": 51     # Entra a la columna verde después de la casilla 51
+}
 
 def generate_board_path():
-    """Genera el camino completo del tablero de Ludo"""
+    """Genera el camino completo del tablero de Ludo - 68 casillas"""
     path = []
     x = BOARD_OFFSET_X
     y = BOARD_OFFSET_Y
-    
-    # El tablero tiene 15x15 casillas, con las casas en las esquinas
-    # El camino principal tiene 52 casillas
-    # Centrar las fichas en las casillas
     offset = CELL_SIZE // 2
     
-    # Empezando desde la casilla de salida roja (abajo de la casa roja)
-    # Columna izquierda subiendo (6 casillas)
+    # El tablero tiene 68 casillas numeradas del 1 al 68
+    # Basándome en la imagen del tablero numerado
+    
+    # Casillas 1-6: Columna 6 hacia abajo
     for i in range(6):
-        path.append((x + CELL_SIZE * 6 + offset, y + CELL_SIZE * (13 - i) + offset))
+        path.append((x + CELL_SIZE * 6 + offset, y + CELL_SIZE * (8 + i) + offset))
     
-    # Columna izquierda del brazo superior (2 casillas)
-    for i in range(2):
-        path.append((x + CELL_SIZE * (5 - i) + offset, y + CELL_SIZE * 6 + offset))
+    # Casillas 7-8: Giro en la esquina inferior izquierda
+    path.append((x + CELL_SIZE * 5 + offset, y + CELL_SIZE * 14 + offset))
+    path.append((x + CELL_SIZE * 4 + offset, y + CELL_SIZE * 14 + offset))
     
-    # Fila superior hacia la derecha (5 casillas)
-    for i in range(5):
-        path.append((x + CELL_SIZE * i + offset, y + CELL_SIZE * 7 + offset))
+    # Casillas 9-14: Fila inferior hacia la izquierda
+    for i in range(6):
+        path.append((x + CELL_SIZE * (3 - i) + offset, y + CELL_SIZE * 13 + offset))
     
-    # Giro a la columna derecha (2 casillas)
-    for i in range(2):
-        path.append((x + CELL_SIZE * 6 + offset, y + CELL_SIZE * (5 - i) + offset))
+    # Casillas 15-16: Giro hacia arriba
+    path.append((x + CELL_SIZE * 0 + offset, y + CELL_SIZE * 12 + offset))
+    path.append((x + CELL_SIZE * 0 + offset, y + CELL_SIZE * 11 + offset))
     
-    # Columna central superior bajando a zona verde (5 casillas)
-    for i in range(5):
-        path.append((x + CELL_SIZE * 7 + offset, y + CELL_SIZE * i + offset))
+    # Casillas 17-22: Columna izquierda hacia arriba
+    for i in range(6):
+        path.append((x + CELL_SIZE * 1 + offset, y + CELL_SIZE * (10 - i) + offset))
     
-    # Columna derecha del brazo derecho (2 casillas)
-    for i in range(2):
-        path.append((x + CELL_SIZE * 8 + offset, y + CELL_SIZE * (5 + i) + offset))
+    # Casillas 23-24: Giro en la esquina superior izquierda
+    path.append((x + CELL_SIZE * 0 + offset, y + CELL_SIZE * 4 + offset))
+    path.append((x + CELL_SIZE * 0 + offset, y + CELL_SIZE * 3 + offset))
     
-    # Fila central derecha (5 casillas)
-    for i in range(5):
-        path.append((x + CELL_SIZE * (9 + i) + offset, y + CELL_SIZE * 6 + offset))
+    # Casillas 25-30: Fila superior hacia la derecha
+    for i in range(6):
+        path.append((x + CELL_SIZE * i + offset, y + CELL_SIZE * 1 + offset))
     
-    # Giro a la columna derecha bajando (2 casillas)
-    for i in range(2):
-        path.append((x + CELL_SIZE * 14 + offset, y + CELL_SIZE * (7 + i) + offset))
+    # Casillas 31-32: Entrada a la zona superior
+    path.append((x + CELL_SIZE * 6 + offset, y + CELL_SIZE * 0 + offset))
+    path.append((x + CELL_SIZE * 7 + offset, y + CELL_SIZE * 0 + offset))
     
-    # Columna derecha bajando (5 casillas)
-    for i in range(5):
-        path.append((x + CELL_SIZE * 14 + offset, y + CELL_SIZE * (9 + i) + offset))
+    # Casillas 33-34: Continuación zona superior
+    path.append((x + CELL_SIZE * 8 + offset, y + CELL_SIZE * 0 + offset))
+    path.append((x + CELL_SIZE * 8 + offset, y + CELL_SIZE * 1 + offset))
     
-    # Columna derecha del brazo inferior (2 casillas)
-    for i in range(2):
-        path.append((x + CELL_SIZE * (13 - i) + offset, y + CELL_SIZE * 8 + offset))
+    # Casillas 35-40: Columna 8 hacia abajo
+    for i in range(6):
+        path.append((x + CELL_SIZE * 8 + offset, y + CELL_SIZE * (2 + i) + offset))
     
-    # Fila inferior hacia la izquierda (5 casillas)
-    for i in range(5):
-        path.append((x + CELL_SIZE * (11 - i) + offset, y + CELL_SIZE * 7 + offset))
+    # Casillas 41-42: Giro hacia la derecha
+    path.append((x + CELL_SIZE * 8 + offset, y + CELL_SIZE * 8 + offset))
+    path.append((x + CELL_SIZE * 9 + offset, y + CELL_SIZE * 8 + offset))
     
-    # Giro a la columna izquierda (2 casillas)
-    for i in range(2):
-        path.append((x + CELL_SIZE * 8 + offset, y + CELL_SIZE * (9 + i) + offset))
+    # Casillas 43-48: Fila central hacia la derecha
+    for i in range(6):
+        path.append((x + CELL_SIZE * (9 + i) + offset, y + CELL_SIZE * 7 + offset))
     
-    # Columna central inferior subiendo a zona azul (5 casillas)
-    for i in range(5):
-        path.append((x + CELL_SIZE * 7 + offset, y + CELL_SIZE * (14 - i) + offset))
+    # Casillas 49-50: Giro en la esquina superior derecha
+    path.append((x + CELL_SIZE * 14 + offset, y + CELL_SIZE * 2 + offset))
+    path.append((x + CELL_SIZE * 14 + offset, y + CELL_SIZE * 3 + offset))
     
-    # Últimas casillas antes de completar el circuito (2 casillas)
-    for i in range(2):
-        path.append((x + CELL_SIZE * 6 + offset, y + CELL_SIZE * (9 - i) + offset))
+    # Casillas 51-56: Columna derecha hacia abajo
+    for i in range(6):
+        path.append((x + CELL_SIZE * 13 + offset, y + CELL_SIZE * (4 + i) + offset))
+    
+    # Casillas 57-58: Giro en la esquina inferior derecha
+    path.append((x + CELL_SIZE * 14 + offset, y + CELL_SIZE * 10 + offset))
+    path.append((x + CELL_SIZE * 14 + offset, y + CELL_SIZE * 11 + offset))
+    
+    # Casillas 59-64: Fila inferior hacia la izquierda
+    for i in range(6):
+        path.append((x + CELL_SIZE * (14 - i) + offset, y + CELL_SIZE * 13 + offset))
+    
+    # Casillas 65-66: Entrada a la zona inferior
+    path.append((x + CELL_SIZE * 8 + offset, y + CELL_SIZE * 14 + offset))
+    path.append((x + CELL_SIZE * 7 + offset, y + CELL_SIZE * 14 + offset))
+    
+    # Casillas 67-68: Columna 7 hacia arriba
+    path.append((x + CELL_SIZE * 7 + offset, y + CELL_SIZE * 13 + offset))
+    path.append((x + CELL_SIZE * 7 + offset, y + CELL_SIZE * 12 + offset))
     
     return path
 
 # Caminos de entrada a casa para cada color
 def generate_home_paths():
-    """Genera los caminos de entrada a casa para cada color"""
+    """Genera los caminos de entrada a casa para cada color - 8 casillas incluida la meta"""
     x = BOARD_OFFSET_X
     y = BOARD_OFFSET_Y
     offset = CELL_SIZE // 2
     
     home_paths = {
-        # Camino rojo: columna central izquierda hacia arriba
-        "red": [(x + CELL_SIZE * 7 + offset, y + CELL_SIZE * (13 - i) + offset) for i in range(6)],
-        # Camino verde: fila central superior hacia la derecha
-        "green": [(x + CELL_SIZE * (1 + i) + offset, y + CELL_SIZE * 7 + offset) for i in range(6)],
-        # Camino amarillo: columna central derecha hacia abajo
-        "yellow": [(x + CELL_SIZE * 7 + offset, y + CELL_SIZE * (1 + i) + offset) for i in range(6)],
-        # Camino azul: fila central inferior hacia la izquierda
-        "blue": [(x + CELL_SIZE * (13 - i) + offset, y + CELL_SIZE * 7 + offset) for i in range(6)]
+        # Camino rojo: columna central izquierda hacia arriba (8 casillas)
+        "red": [(x + CELL_SIZE * 6 + offset, y + CELL_SIZE * (7 - i) + offset) for i in range(8)],
+        # Camino verde: fila central superior hacia la derecha (8 casillas)
+        "green": [(x + CELL_SIZE * (7 + i) + offset, y + CELL_SIZE * 6 + offset) for i in range(8)],
+        # Camino amarillo: columna central derecha hacia abajo (8 casillas)
+        "yellow": [(x + CELL_SIZE * 8 + offset, y + CELL_SIZE * (7 + i) + offset) for i in range(8)],
+        # Camino azul: fila central inferior hacia la izquierda (8 casillas)
+        "blue": [(x + CELL_SIZE * (7 - i) + offset, y + CELL_SIZE * 8 + offset) for i in range(8)]
     }
     
     return home_paths
-
-# Posiciones de inicio en el camino principal
-START_POSITIONS = {
-    "red": 0,    # Empieza en la primera casilla del camino (columna izquierda abajo)
-    "green": 13, # Empieza después de 13 casillas (columna superior derecha)
-    "yellow": 26, # Empieza después de 26 casillas (columna derecha abajo)
-    "blue": 39   # Empieza después de 39 casillas (columna inferior izquierda)
-}
 
 class Piece:
     """Representa una ficha del juego"""
@@ -264,64 +286,92 @@ class Piece:
         if self.on_home_path:
             # Verificar si puede moverse en el camino de casa
             new_position = self.home_path_position + steps
-            return new_position <= 5  # No puede pasarse de la meta
+            return new_position <= 7  # Las columnas de color tienen 8 casillas (0-7)
         else:
             # En el camino principal
-            # Calcular si llegará al camino de casa
-            current_lap_position = self.path_position
+            current_position = self.path_position
             
-            # Calcular la posición de entrada a casa
-            home_entrance = START_POSITIONS[self.color] + 50
-            if home_entrance >= 52:
-                home_entrance -= 52
+            # Verificar si llegará a la entrada de su columna de color
+            home_entrance = HOME_ENTRANCE_POSITIONS[self.color]
             
-            # Si está antes de la entrada y pasará por ella
-            if current_lap_position < home_entrance:
-                new_position = current_lap_position + steps
-                if new_position > home_entrance:
+            # Calcular nueva posición considerando el ciclo de 68 casillas
+            new_position = current_position + steps
+            
+            # Verificar si pasará por la entrada a casa
+            if current_position < home_entrance:
+                if new_position >= home_entrance:
                     # Entrará al camino de casa
-                    steps_to_entrance = home_entrance - current_lap_position
+                    steps_to_entrance = home_entrance - current_position
                     remaining_steps = steps - steps_to_entrance
-                    return remaining_steps <= 6
+                    return remaining_steps <= 8  # No puede pasarse de las 8 casillas
+            elif current_position > home_entrance:
+                # Si está después de la entrada, verificar si dará la vuelta y llegará
+                if new_position > 68:
+                    wrapped_position = new_position - 68
+                    if wrapped_position >= home_entrance:
+                        # Dará la vuelta y pasará por la entrada
+                        steps_to_68 = 68 - current_position
+                        steps_from_1 = wrapped_position
+                        if steps_from_1 >= home_entrance:
+                            steps_to_entrance = steps_to_68 + home_entrance
+                            remaining_steps = steps - steps_to_entrance
+                            return remaining_steps <= 8
             
             return True
     
     def move(self, steps: int):
         """Mueve la ficha"""
         if self.is_home and steps == 6:
+            # Salir de casa
             self.is_home = False
-            self.path_position = START_POSITIONS[self.color]
-            self.is_safe = self.path_position in SAFE_POSITIONS
+            self.path_position = START_POSITIONS[self.color] - 1  # -1 porque el array empieza en 0
+            self.is_safe = (self.path_position + 1) in SAFE_POSITIONS
         elif not self.is_home and not self.has_finished:
             if self.on_home_path:
                 # Mover en el camino de casa
                 self.home_path_position += steps
-                if self.home_path_position == 5:
+                if self.home_path_position >= 7:  # Llegó a la flecha (posición 7)
                     self.has_finished = True
+                    self.home_path_position = 7
             else:
                 # Mover en el camino principal
-                home_entrance = START_POSITIONS[self.color] + 50
-                if home_entrance >= 52:
-                    home_entrance -= 52
+                current_position = self.path_position
+                home_entrance = HOME_ENTRANCE_POSITIONS[self.color]
+                new_position = current_position + steps
                 
                 # Verificar si entrará al camino de casa
-                if self.path_position < home_entrance:
-                    new_position = self.path_position + steps
+                should_enter_home = False
+                steps_to_entrance = 0
+                
+                if current_position < home_entrance:
                     if new_position >= home_entrance:
-                        # Entrar al camino de casa
-                        steps_to_entrance = home_entrance - self.path_position
-                        remaining_steps = steps - steps_to_entrance
-                        self.on_home_path = True
-                        self.home_path_position = remaining_steps - 1
-                        if self.home_path_position == 5:
-                            self.has_finished = True
-                    else:
-                        self.path_position = new_position % 52
-                        self.is_safe = self.path_position in SAFE_POSITIONS
+                        should_enter_home = True
+                        steps_to_entrance = home_entrance - current_position
+                elif current_position > home_entrance:
+                    # Verificar si dará la vuelta y entrará
+                    if new_position > 68:
+                        wrapped_position = new_position - 68
+                        if wrapped_position >= home_entrance:
+                            should_enter_home = True
+                            steps_to_entrance = (68 - current_position) + home_entrance
+                
+                if should_enter_home:
+                    # Entrar al camino de casa
+                    remaining_steps = steps - steps_to_entrance
+                    self.on_home_path = True
+                    self.home_path_position = remaining_steps - 1
+                    if self.home_path_position >= 7:
+                        self.has_finished = True
+                        self.home_path_position = 7
                 else:
-                    # Movimiento normal
-                    self.path_position = (self.path_position + steps) % 52
-                    self.is_safe = self.path_position in SAFE_POSITIONS
+                    # Movimiento normal en el camino principal
+                    if new_position > 68:
+                        self.path_position = new_position - 68
+                    else:
+                        self.path_position = new_position
+                    
+                    # Actualizar si está en posición segura
+                    self.is_safe = (self.path_position + 1) in SAFE_POSITIONS
         
         self.update_position()
     
@@ -479,7 +529,7 @@ class Player:
                     pieces.append(piece)
         return pieces
     
-    def ai_select_piece(self, movable_pieces: List[Piece], all_players: List['Player']) -> Optional[Piece]:
+    def ai_select_piece(self, movable_pieces: List[Piece], all_players: List['Player'], dice_value: int) -> Optional[Piece]:
         """IA para seleccionar qué ficha mover"""
         if not movable_pieces:
             return None
@@ -506,14 +556,18 @@ class Player:
             if piece.on_home_path:
                 score += 50 + piece.home_path_position * 10
             else:
-                # Calcular distancia a la meta
-                distance_to_home = 50 - piece.path_position
-                if distance_to_home < 0:
-                    distance_to_home += 52
-                score += (52 - distance_to_home)
+                # Calcular distancia a la meta considerando entrada a casa
+                home_entrance = HOME_ENTRANCE_POSITIONS[self.color]
+                if piece.path_position <= home_entrance:
+                    distance_to_home = home_entrance - piece.path_position
+                else:
+                    distance_to_home = (68 - piece.path_position) + home_entrance
+                score += (68 - distance_to_home)
             
             # Bonus por capturar oponentes
-            future_position = (piece.path_position + 6) % 52
+            future_position = piece.path_position + dice_value
+            if future_position > 68:
+                future_position = future_position - 68
             for player in all_players:
                 if player.color != self.color:
                     for enemy_piece in player.pieces:
@@ -547,6 +601,7 @@ class Board:
     
     def _create_detailed_board(self) -> pygame.Surface:
         """Crea un tablero detallado de Ludo"""
+        global MAIN_PATH
         surface = pygame.Surface((BOARD_SIZE, BOARD_SIZE))
         surface.fill((250, 248, 240))  # Fondo beige claro
         
@@ -639,44 +694,74 @@ class Board:
         pygame.draw.polygon(surface, BLUE, points)
         pygame.draw.polygon(surface, BLACK, points, 2)
         
-        # Marcar las casillas de inicio con flechas
-        # Inicio rojo (sale hacia la izquierda)
-        start_rect = pygame.Rect(CELL_SIZE * 6, CELL_SIZE * 8, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, RED, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "up", WHITE)
-        
-        # Inicio verde (sale hacia abajo)
-        start_rect = pygame.Rect(CELL_SIZE * 8, CELL_SIZE * 6, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, GREEN, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "right", WHITE)
-        
-        # Inicio amarillo (sale hacia la derecha)
-        start_rect = pygame.Rect(CELL_SIZE * 8, CELL_SIZE * 8, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, YELLOW, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "down", WHITE)
-        
-        # Inicio azul (sale hacia arriba)
-        start_rect = pygame.Rect(CELL_SIZE * 6, CELL_SIZE * 6, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, BLUE, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "left", WHITE)
+        # Marcar las casillas de inicio con flechas según las posiciones reales
+        # Las posiciones están basadas en el array MAIN_PATH generado
+        if MAIN_PATH:
+            # Inicio amarillo (casilla 5)
+            if 4 < len(MAIN_PATH):
+                x, y = MAIN_PATH[4]  # Índice 4 = casilla 5
+                x -= BOARD_OFFSET_X
+                y -= BOARD_OFFSET_Y
+                start_rect = pygame.Rect(x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(surface, YELLOW, start_rect)
+                pygame.draw.rect(surface, BLACK, start_rect, 3)
+                self._draw_arrow(surface, x, y, "down", WHITE)
+            
+            # Inicio azul (casilla 22)
+            if 21 < len(MAIN_PATH):
+                x, y = MAIN_PATH[21]  # Índice 21 = casilla 22
+                x -= BOARD_OFFSET_X
+                y -= BOARD_OFFSET_Y
+                start_rect = pygame.Rect(x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(surface, BLUE, start_rect)
+                pygame.draw.rect(surface, BLACK, start_rect, 3)
+                self._draw_arrow(surface, x, y, "right", WHITE)
+            
+            # Inicio rojo (casilla 39)
+            if 38 < len(MAIN_PATH):
+                x, y = MAIN_PATH[38]  # Índice 38 = casilla 39
+                x -= BOARD_OFFSET_X
+                y -= BOARD_OFFSET_Y
+                start_rect = pygame.Rect(x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(surface, RED, start_rect)
+                pygame.draw.rect(surface, BLACK, start_rect, 3)
+                self._draw_arrow(surface, x, y, "up", WHITE)
+            
+            # Inicio verde (casilla 56)
+            if 55 < len(MAIN_PATH):
+                x, y = MAIN_PATH[55]  # Índice 55 = casilla 56
+                x -= BOARD_OFFSET_X
+                y -= BOARD_OFFSET_Y
+                start_rect = pygame.Rect(x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(surface, GREEN, start_rect)
+                pygame.draw.rect(surface, BLACK, start_rect, 3)
+                self._draw_arrow(surface, x, y, "down", WHITE)
         
         # Marcar las casillas seguras con estrellas
         # Estas deben coincidir con las posiciones del camino
-        global MAIN_PATH
         if MAIN_PATH:  # Solo si el camino ya ha sido generado
             for i, pos in enumerate(SAFE_POSITIONS):
-                if pos < len(MAIN_PATH):
-                    x, y = MAIN_PATH[pos]
+                if pos <= len(MAIN_PATH):
+                    x, y = MAIN_PATH[pos - 1]  # -1 porque SAFE_POSITIONS usa numeración 1-68
                     x -= BOARD_OFFSET_X
                     y -= BOARD_OFFSET_Y
                     # Dibujar estrella en la casilla
                     pygame.draw.rect(surface, (255, 255, 200), (x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE))
                     pygame.draw.rect(surface, BLACK, (x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE), 1)
                     self._draw_star(surface, x, y, 15, GRAY)
+        
+        # Dibujar números en las casillas del camino principal
+        if MAIN_PATH:
+            number_font = pygame.font.Font(None, 16)
+            for i, pos in enumerate(MAIN_PATH):
+                x, y = pos
+                x -= BOARD_OFFSET_X
+                y -= BOARD_OFFSET_Y
+                
+                # Dibujar el número de la casilla (1-68)
+                number_text = number_font.render(str(i + 1), True, BLACK)
+                number_rect = number_text.get_rect(center=(x, y))
+                surface.blit(number_text, number_rect)
         
         return surface
     
@@ -920,7 +1005,7 @@ class LudoGame:
         elif not current_player.can_roll and not current_player.has_moved:
             # Seleccionar y mover ficha
             movable_pieces = current_player.get_movable_pieces(self.dice.value)
-            selected_piece = current_player.ai_select_piece(movable_pieces, self.players)
+            selected_piece = current_player.ai_select_piece(movable_pieces, self.players, self.dice.value)
             
             if selected_piece:
                 selected_piece.move(self.dice.value)
