@@ -325,7 +325,7 @@ class LudoServer:
         self.server_socket = None
         self.accept_thread = None
         self.running = False
-        self._init_server()
+        # self._init_server()  # <-- ELIMINADO: el socket solo se crea al iniciar el servidor
         self.users = load_users()  # {username: {password, nombre, apellido}}
         self.clients = {}  # {username: (socket, thread)}
         self.lock = threading.Lock()
@@ -369,11 +369,12 @@ class LudoServer:
 
     def start_in_thread(self):
         if not self.running:
-            # Si el socket fue cerrado, re-crear
             self._init_server()
             self.running = True
-            self.accept_thread = threading.Thread(target=self.start, args=(False,), daemon=True)
+            # Lanzar accept_clients directamente, no self.start
+            self.accept_thread = threading.Thread(target=self.accept_clients, daemon=True)
             self.accept_thread.start()
+            print("Servidor iniciado. Esperando conexiones...")
 
     def stop_server(self):
         self.running = False

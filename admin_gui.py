@@ -11,9 +11,9 @@ class AdminGUI:
     def __init__(self, master):
         self.master = master
         master.title("Administrador Ludo - Servidor")
-        self.server = LudoServer()
-        self.server.start_in_thread()
-        self.users = self.server.users
+        self.server = None
+        self.users = {}
+        self.server_running = False
         self.build_gui()
         self.update_connected_users()
         self.update_stats()
@@ -45,6 +45,22 @@ class AdminGUI:
 
     def build_game_tab(self):
         frame = self.tab_game
+        # Campos para IP y puerto
+        ip_frame = tk.Frame(frame)
+        ip_frame.pack(pady=5)
+        tk.Label(ip_frame, text="IP del servidor:").grid(row=0, column=0)
+        self.entry_ip = tk.Entry(ip_frame)
+        self.entry_ip.insert(0, "localhost")
+        self.entry_ip.grid(row=0, column=1)
+        tk.Label(ip_frame, text="Puerto:").grid(row=0, column=2)
+        self.entry_port = tk.Entry(ip_frame, width=6)
+        self.entry_port.insert(0, "9999")
+        self.entry_port.grid(row=0, column=3)
+        self.btn_start_server = tk.Button(ip_frame, text="Iniciar Servidor", command=self.start_server)
+        self.btn_start_server.grid(row=0, column=4, padx=10)
+        self.lbl_server_status = tk.Label(ip_frame, text="Servidor detenido", fg="red")
+        self.lbl_server_status.grid(row=0, column=5, padx=10)
+
         self.lbl_status = tk.Label(frame, text="Estado: Esperando jugadores", font=("Arial", 12))
         self.lbl_status.pack(pady=10)
         btn_start = tk.Button(frame, text="Iniciar Partida", command=self.start_game)
@@ -67,12 +83,31 @@ class AdminGUI:
         self.stats_text.insert(tk.END, "Estadísticas del servidor aparecerán aquí...\n")
         self.stats_text.config(state=tk.DISABLED)
 
+    def start_server(self):
+        if self.server_running:
+            messagebox.showinfo("Servidor", "El servidor ya está en ejecución.")
+            return
+        host = self.entry_ip.get().strip()
+        port = int(self.entry_port.get().strip())
+        from server import LudoServer
+        self.server = LudoServer(host, port)
+        self.server.start_in_thread()
+        self.users = self.server.users
+        self.server_running = True
+        self.lbl_server_status.config(text=f"Servidor en {host}:{port}", fg="green")
+        self.refresh_users_list()
+        self.lbl_status.config(text="Estado: Servidor iniciado, esperando jugadores")
+
     def refresh_users_list(self):
         self.users_listbox.delete(0, tk.END)
-        for user, data in self.server.users.items():
-            self.users_listbox.insert(tk.END, f"{user} - {data.get('nombre','')} {data.get('apellido','')}")
+        if self.server:
+            for user, data in self.server.users.items():
+                self.users_listbox.insert(tk.END, f"{user} - {data.get('nombre','')} {data.get('apellido','')}")
 
     def add_user(self):
+        if not self.server:
+            messagebox.showerror("Error", "Inicie el servidor primero")
+            return
         popup = tk.Toplevel(self.master)
         popup.title("Agregar Usuario")
         tk.Label(popup, text="Login:").grid(row=0, column=0)
@@ -121,6 +156,9 @@ class AdminGUI:
                 self.refresh_users_list()
 
     def start_game(self):
+        if not self.server_running:
+            messagebox.showerror("Error", "Debe iniciar el servidor primero")
+            return
         player_order = self.server.player_order
         if len(player_order) < 2 or len(player_order) > 4:
             messagebox.showwarning("No se puede iniciar", "Debe haber entre 2 y 4 jugadores conectados y autenticados para iniciar la partida.")
@@ -129,31 +167,35 @@ class AdminGUI:
         self.lbl_status.config(text="Estado: Partida iniciada")
 
     def stop_game(self):
-        self.server.stop_server()
-        self.lbl_status.config(text="Estado: Partida detenida")
+        if self.server:
+            self.server.stop_server()
+            self.server_running = False
+            self.lbl_server_status.config(text="Servidor detenido", fg="red")
+            self.lbl_status.config(text="Estado: Partida detenida")
 
     def update_connected_users(self):
-        users = self.server.get_connected_users()
-        self.connected_users_label.config(text=f"Usuarios conectados: {len(users)}")
-        self.connected_users_listbox.delete(0, tk.END)
-        for u in users:
-            self.connected_users_listbox.insert(tk.END, u)
-
-        # Actualiza la lista de jugadores listos
-        self.ready_users_listbox.delete(0, tk.END)
-        for u in self.server.player_order:
-            self.ready_users_listbox.insert(tk.END, u)
+        if self.server:
+            users = self.server.get_connected_users()
+            self.connected_users_label.config(text=f"Usuarios conectados: {len(users)}")
+            self.connected_users_listbox.delete(0, tk.END)
+            for u in users:
+                self.connected_users_listbox.insert(tk.END, u)
+            # Actualiza la lista de jugadores listos
+            self.ready_users_listbox.delete(0, tk.END)
+            for u in self.server.player_order:
+                self.ready_users_listbox.insert(tk.END, u)
         self.master.after(2000, self.update_connected_users)
 
     def update_stats(self):
-        stats = self.server.get_stats()
-        self.stats_text.config(state=tk.NORMAL)
-        self.stats_text.delete(1.0, tk.END)
-        self.stats_text.insert(tk.END, f"Usuarios registrados: {stats['usuarios_registrados']}\n")
-        self.stats_text.insert(tk.END, f"Usuarios conectados: {stats['usuarios_conectados']}\n")
-        self.stats_text.insert(tk.END, f"Partida en curso: {'Sí' if stats['partida_en_curso'] else 'No'}\n")
-        self.stats_text.insert(tk.END, f"Jugadores en partida: {', '.join(stats['jugadores_partida'])}\n")
-        self.stats_text.config(state=tk.DISABLED)
+        if self.server:
+            stats = self.server.get_stats()
+            self.stats_text.config(state=tk.NORMAL)
+            self.stats_text.delete(1.0, tk.END)
+            self.stats_text.insert(tk.END, f"Usuarios registrados: {stats['usuarios_registrados']}\n")
+            self.stats_text.insert(tk.END, f"Usuarios conectados: {stats['usuarios_conectados']}\n")
+            self.stats_text.insert(tk.END, f"Partida en curso: {'Sí' if stats['partida_en_curso'] else 'No'}\n")
+            self.stats_text.insert(tk.END, f"Jugadores en partida: {', '.join(stats['jugadores_partida'])}\n")
+            self.stats_text.config(state=tk.DISABLED)
         self.master.after(3000, self.update_stats)
 
 if __name__ == "__main__":

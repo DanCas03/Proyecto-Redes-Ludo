@@ -555,9 +555,12 @@ class LoginWindow:
             messagebox.showerror("Error", "Usuario y clave requeridos")
             return
         try:
+            print(f"Intentando conectar a {ip}:{port}")
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((ip, port))
+            print("Conexión exitosa")
         except Exception as e:
+            print(f"Error de conexión: {e}")
             messagebox.showerror("Error de conexión", str(e))
             return
         # Enviar login
@@ -566,8 +569,10 @@ class LoginWindow:
             "payload": {"username": user, "password": pw}
         }) + "\n"
         try:
+            print("Enviando credenciales...")
             self.sock.sendall(msg.encode())
             response = self.recv_json()
+            print(f"Respuesta recibida: {response}")
             if response.get('status') == 'success':
                 messagebox.showinfo("Éxito", "Login correcto!")
                 self.root.destroy()
@@ -578,6 +583,7 @@ class LoginWindow:
                 messagebox.showerror("Login fallido", response.get('message', 'Error desconocido'))
                 self.sock.close()
         except Exception as e:
+            print(f"Error en login: {e}")
             messagebox.showerror("Error", str(e))
             self.sock.close()
 
