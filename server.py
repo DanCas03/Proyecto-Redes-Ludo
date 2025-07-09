@@ -33,6 +33,42 @@ HOME_PATH_LEN = 6
 
 USERS_FILE = 'users.json'
 
+# Matriz fija del tablero (igual que en el cliente)
+board_ids = [
+    ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "path",      "path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+    ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+    ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+    ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+    ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+    ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+    ["path",     "start_red", "path",      "path",      "path",      "path",      "meta_tri",  "meta_tri",  "meta_tri",  "path",      "path",      "path",      "path",      "path",      "path"      ],
+    ["path",     "home_red",  "home_red",  "home_red",  "home_red",  "home_red",  "meta_tri",  "meta",      "meta_tri",  "home_yellow","home_yellow","home_yellow","home_yellow","home_yellow","path"      ],
+    ["path",     "path",      "path",      "path",      "path",      "path",      "meta_tri",  "meta_tri",  "meta_tri",  "path",      "path",      "path",      "path",      "start_yellow","path"    ],
+    ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+    ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+    ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+    ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+    ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","start_blue","home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+    ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "path",      "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"]
+]
+# main_path igual que en el cliente
+main_path = [
+    (6,1),(5,6),(4,6),(3,6),(2,6),(1,6), # Rojo sube
+    (0,6),(0,7),(0,8),(1,8),(2,8),(3,8),(4,8),(5,8), # Verde derecha y baja
+    (6,9),(6,10),(6,11),(6,12),(6,13),(7,13), # Amarillo baja
+    (8,13),(8,12),(8,11),(8,10),(8,9),(8,8),(8,7), # Amarillo izquierda
+    (8,6),(9,6),(10,6),(11,6),(12,6),(13,6), # Azul sube
+    (14,6),(14,7),(14,8),(13,8),(12,8),(11,8),(10,8),(9,8), # Azul derecha y sube
+    (8,9),(7,9),(6,9),(5,9),(4,9),(3,9),(2,9),(1,9),(0,9),(0,8),(0,7),(0,6) # Completa el ciclo
+]
+
+def is_path_square(position, color):
+    # Calcula la posición absoluta en el recorrido principal
+    start_offsets = {'red': 0, 'green': 13, 'yellow': 26, 'blue': 39}
+    abs_index = (position + start_offsets[color]) % 52
+    row, col = main_path[abs_index]
+    return board_ids[row][col] == "path"
+
 class Player:
     def __init__(self, username, nombre, color):
         self.username = username
@@ -114,8 +150,10 @@ class Board:
                 else:
                     return False
             else:
-                # Verifica bloqueo en destino
+                # Verifica bloqueo en destino y que sea 'path'
                 dest = (piece.position + dice_value) % MAIN_PATH_LEN
+                if not is_path_square(dest, piece.color):
+                    return False
                 others = [p for p in self.get_pieces_at(dest) if p.color == piece.color]
                 return len(others) < 2
         # Si está en pasillo final
@@ -140,8 +178,11 @@ class Board:
                 home_steps = dice_value - steps_left - 1
                 piece.position = 100 + home_steps
             else:
-                # Avanza en el recorrido principal
-                piece.position = (piece.position + dice_value) % MAIN_PATH_LEN
+                # Avanza en el recorrido principal solo si es 'path'
+                dest = (piece.position + dice_value) % MAIN_PATH_LEN
+                if not is_path_square(dest, piece.color):
+                    return False
+                piece.position = dest
         elif piece.is_in_home_path():
             piece.position += dice_value
             if piece.position == 100 + HOME_PATH_LEN:

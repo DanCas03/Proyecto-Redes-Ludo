@@ -45,35 +45,25 @@ class Board:
         }
 
     def _create_grid(self):
-        grid = [["blanco" for _ in range(15)] for _ in range(15)]
-        # Bases sólidas 6x6
-        for i in range(6):
-            for j in range(6):
-                grid[i][j] = "base_red"
-                grid[i][14-j] = "base_green"
-                grid[14-i][j] = "base_blue"
-                grid[14-i][14-j] = "base_yellow"
-        # Centro
-        for i in range(6,9):
-            for j in range(6,9):
-                grid[i][j] = "meta"
-        # Pasillos finales
-        for i in range(1,7):
-            grid[7][i] = "home_red"
-            grid[i][7] = "home_green"
-            grid[7][14-i] = "home_yellow"
-            grid[14-i][7] = "home_blue"
-        # Camino principal (blanco) - solo fuera de las bases
-        for (r,c) in self._define_main_path():
-            # Solo marcar como camino si no es base
-            if not ((r < 6 and c < 6) or (r < 6 and c > 8) or (r > 8 and c < 6) or (r > 8 and c > 8)):
-                grid[r][c] = "camino"
-        # Casillas de salida
-        grid[6][1] = "salida_red"
-        grid[1][8] = "salida_green"
-        grid[8][13] = "salida_yellow"
-        grid[13][6] = "salida_blue"
-        return grid
+        # Matriz fija según la estructura exacta del tablero
+        board_ids = [
+            ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "path",      "path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+            ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+            ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+            ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+            ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+            ["base_red", "base_red", "base_red", "base_red", "base_red", "base_red", "path",      "home_green","path",      "base_green","base_green","base_green","base_green","base_green","base_green"],
+            ["path",     "start_red", "path",      "path",      "path",      "path",      "meta_tri",  "meta_tri",  "meta_tri",  "path",      "path",      "path",      "path",      "path",      "path"      ],
+            ["path",     "home_red",  "home_red",  "home_red",  "home_red",  "home_red",  "meta_tri",  "meta",      "meta_tri",  "home_yellow","home_yellow","home_yellow","home_yellow","home_yellow","path"      ],
+            ["path",     "path",      "path",      "path",      "path",      "path",      "meta_tri",  "meta_tri",  "meta_tri",  "path",      "path",      "path",      "path",      "start_yellow","path"    ],
+            ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+            ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+            ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+            ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+            ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","start_blue","home_blue", "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"],
+            ["base_blue","base_blue","base_blue","base_blue","base_blue","base_blue","path",      "path",      "path",      "base_yellow","base_yellow","base_yellow","base_yellow","base_yellow","base_yellow"]
+        ]
+        return board_ids
 
     def _define_main_path(self):
         # Camino blanco, sentido horario, iniciando en la salida de rojo (6,1)
@@ -112,6 +102,11 @@ class Board:
             'blue':  [(10,1), (10,4), (13,1), (13,4)]
         }
 
+    def is_walkable(self, row, col):
+        """Devuelve True si la casilla es transitable para fichas (solo 'path')."""
+        tipo = self.grid[row][col]
+        return tipo == "path"
+
     def draw_board(self):
         c = self.canvas
         cell = self.cell_size
@@ -119,18 +114,38 @@ class Board:
         for row in range(15):
             for col in range(15):
                 tipo = self.grid[row][col]
-                color = "white"
-                if tipo == "base_red": color = COLOR_MAP['red']
-                elif tipo == "base_green": color = COLOR_MAP['green']
-                elif tipo == "base_yellow": color = COLOR_MAP['yellow']
-                elif tipo == "base_blue": color = COLOR_MAP['blue']
-                elif tipo == "home_red": color = COLOR_MAP['red']
-                elif tipo == "home_green": color = COLOR_MAP['green']
-                elif tipo == "home_yellow": color = COLOR_MAP['yellow']
-                elif tipo == "home_blue": color = COLOR_MAP['blue']
-                elif tipo == "meta": color = "#f8f8f8"
-                elif tipo == "camino": color = "white"
-                elif tipo.startswith("salida_"): color = "#888"
+                if tipo == "base_red":
+                    color = "#e74c3c"
+                elif tipo == "base_green":
+                    color = "#27ae60"
+                elif tipo == "base_yellow":
+                    color = "#f1c40f"
+                elif tipo == "base_blue":
+                    color = "#2980b9"
+                elif tipo == "path":
+                    color = "white"
+                elif tipo == "home_red":
+                    color = "#e74c3c"
+                elif tipo == "home_green":
+                    color = "#27ae60"
+                elif tipo == "home_yellow":
+                    color = "#f1c40f"
+                elif tipo == "home_blue":
+                    color = "#2980b9"
+                elif tipo == "start_red":
+                    color = "#888"
+                elif tipo == "start_green":
+                    color = "#888"
+                elif tipo == "start_yellow":
+                    color = "#888"
+                elif tipo == "start_blue":
+                    color = "#888"
+                elif tipo == "meta":
+                    color = "#f8f8f8"
+                elif tipo == "meta_tri":
+                    color = "#cccccc"
+                else:
+                    color = "white"
                 c.create_rectangle(col*cell, row*cell, (col+1)*cell, (row+1)*cell, fill=color, outline="black", width=1, tags="board")
         # Centro: círculo blanco
         c.create_oval(6*cell,6*cell,9*cell,9*cell, fill="#f8f8f8", outline="black", width=2, tags="board")
@@ -165,6 +180,13 @@ class Board:
         if position == -1:
             row, col = self.base_coords[color][idx]
             return self.get_canvas_coords_from_grid(row, col)
+        # 2.5. Primera salida: posición 0 (de la base a start_color)
+        if position == 0:
+            # Buscar la casilla 'start_color' en la cuadrícula
+            for row in range(15):
+                for col in range(15):
+                    if self.grid[row][col] == f"start_{color}":
+                        return self.get_canvas_coords_from_grid(row, col)
         # 3. En pasillo final
         if 101 <= position <= 106:
             home_idx = position - 101
@@ -174,12 +196,25 @@ class Board:
             else:
                 return (7.5*self.cell_size, 7.5*self.cell_size)
         # 4. Camino principal
-        if 0 <= position <= 51:
+        if 0 < position <= 51:
             abs_index = (position + self.start_offsets[color]) % 52
             row, col = self.main_path[abs_index]
             return self.get_canvas_coords_from_grid(row, col)
         # 5. Meta
         return (7.5*self.cell_size, 7.5*self.cell_size)
+
+    def can_move_to(self, position):
+        """Devuelve True si la posición lógica corresponde a una casilla 'path' blanca."""
+        if 0 <= position < len(self.main_path):
+            row, col = self.main_path[position]
+            return self.grid[row][col] == "path"
+        return False
+
+    # Ejemplo de uso en la lógica de movimiento (ajusta donde corresponda):
+    # if self.can_move_to(nueva_posicion):
+    #     # Permitir movimiento
+    # else:
+    #     # No permitir movimiento
 
 class GameWindow:
     def __init__(self, root, username, sock):
