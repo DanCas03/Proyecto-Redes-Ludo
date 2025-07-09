@@ -1,0 +1,22 @@
+{
+  "1": {
+    "password": "1",
+    "nombre": "Nombre2",
+    "apellido": "Apellido2"
+  },
+  "2": {
+    "password": "2",
+    "nombre": "Nombre1",
+    "apellido": "Apellido1"
+  },
+  "ALE": {
+    "password": "ALE",
+    "nombre": "ALE",
+    "apellido": "ALE"
+  },
+  "PRI": {
+    "password": "PRI",
+    "nombre": "PRI",
+    "apellido": "PRI"
+  }
+}

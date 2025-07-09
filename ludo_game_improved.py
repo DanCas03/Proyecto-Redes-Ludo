@@ -14,8 +14,8 @@ WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 900
 FPS = 60
 BOARD_SIZE = 700
-BOARD_OFFSET_X = (WINDOW_WIDTH - BOARD_SIZE) // 2
-BOARD_OFFSET_Y = (WINDOW_HEIGHT - BOARD_SIZE) // 2
+BOARD_OFFSET_X = 100
+BOARD_OFFSET_Y = 100
 
 # Colores
 WHITE = (255, 255, 255)
@@ -38,34 +38,56 @@ class GameState(Enum):
     PAUSED = "paused"
 
 # Tamaño de las casillas del tablero
-CELL_SIZE = BOARD_SIZE // 15
+CELL_SIZE = 50
 
-# Posiciones de las casas de inicio (ajustadas al tablero real)
+# Recorrido principal (52 casillas, sentido agujas del reloj)
+MAIN_PATH = [
+    # Desde la salida roja (abajo izquierda, sube)
+    *[(BOARD_OFFSET_X + CELL_SIZE * 6, BOARD_OFFSET_Y + CELL_SIZE * (12 - i)) for i in range(6)],
+    # Izquierda a derecha (arriba)
+    *[(BOARD_OFFSET_X + CELL_SIZE * (6 - i), BOARD_OFFSET_Y + CELL_SIZE * 6) for i in range(1, 6)],
+    # Sube a la entrada verde
+    (BOARD_OFFSET_X, BOARD_OFFSET_Y + CELL_SIZE * 6),
+    *[(BOARD_OFFSET_X, BOARD_OFFSET_Y + CELL_SIZE * (6 - i)) for i in range(1, 6)],
+    # Derecha (izquierda a derecha, arriba)
+    *[(BOARD_OFFSET_X + CELL_SIZE * i, BOARD_OFFSET_Y) for i in range(1, 6)],
+    # Baja a la entrada amarilla
+    (BOARD_OFFSET_X + CELL_SIZE * 6, BOARD_OFFSET_Y),
+    *[(BOARD_OFFSET_X + CELL_SIZE * 6, BOARD_OFFSET_Y + CELL_SIZE * i) for i in range(1, 6)],
+    # Derecha a izquierda (abajo)
+    *[(BOARD_OFFSET_X + CELL_SIZE * (6 + i), BOARD_OFFSET_Y + CELL_SIZE * 6) for i in range(1, 6)],
+    # Derecha (sube a la entrada azul)
+    (BOARD_OFFSET_X + CELL_SIZE * 12, BOARD_OFFSET_Y + CELL_SIZE * 6),
+    *[(BOARD_OFFSET_X + CELL_SIZE * 12, BOARD_OFFSET_Y + CELL_SIZE * (6 + i)) for i in range(1, 6)],
+    # Izquierda a derecha (abajo)
+    *[(BOARD_OFFSET_X + CELL_SIZE * (12 - i), BOARD_OFFSET_Y + CELL_SIZE * 12) for i in range(1, 6)],
+    # Sube a la entrada roja
+    (BOARD_OFFSET_X + CELL_SIZE * 6, BOARD_OFFSET_Y + CELL_SIZE * 12),
+    *[(BOARD_OFFSET_X + CELL_SIZE * 6, BOARD_OFFSET_Y + CELL_SIZE * (12 - i)) for i in range(1, 6)],
+]
+
+# Caminos de entrada a meta para cada color (6 casillas)
+HOME_PATHS = {
+    'red':   [(BOARD_OFFSET_X + CELL_SIZE * (6 - i), BOARD_OFFSET_Y + CELL_SIZE * 7) for i in range(6)],
+    'blue':  [(BOARD_OFFSET_X + CELL_SIZE * 7, BOARD_OFFSET_Y + CELL_SIZE * (6 + i)) for i in range(6)],
+    'yellow':[(BOARD_OFFSET_X + CELL_SIZE * (6 + i), BOARD_OFFSET_Y + CELL_SIZE * 7) for i in range(6)],
+    'green': [(BOARD_OFFSET_X + CELL_SIZE * 7, BOARD_OFFSET_Y + CELL_SIZE * (6 - i)) for i in range(6)]
+}
+
+# Posiciones de inicio (casas)
 HOME_POSITIONS = {
-    "red": [
-        (BOARD_OFFSET_X + CELL_SIZE * 2.5, BOARD_OFFSET_Y + CELL_SIZE * 2.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 2.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 2.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5)
-    ],
-    "green": [
-        (BOARD_OFFSET_X + CELL_SIZE * 11.5, BOARD_OFFSET_Y + CELL_SIZE * 2.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 2.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 11.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5)
-    ],
-    "yellow": [
-        (BOARD_OFFSET_X + CELL_SIZE * 11.5, BOARD_OFFSET_Y + CELL_SIZE * 11.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 11.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 11.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5)
-    ],
-    "blue": [
-        (BOARD_OFFSET_X + CELL_SIZE * 2.5, BOARD_OFFSET_Y + CELL_SIZE * 11.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 11.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 2.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5),
-        (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5)
-    ]
+    'red':   [(BOARD_OFFSET_X + CELL_SIZE * 1.5, BOARD_OFFSET_Y + CELL_SIZE * 1.5), (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 1.5), (BOARD_OFFSET_X + CELL_SIZE * 1.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5), (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5)],
+    'blue':  [(BOARD_OFFSET_X + CELL_SIZE * 1.5, BOARD_OFFSET_Y + CELL_SIZE * 10.5), (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 10.5), (BOARD_OFFSET_X + CELL_SIZE * 1.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5), (BOARD_OFFSET_X + CELL_SIZE * 3.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5)],
+    'yellow':[(BOARD_OFFSET_X + CELL_SIZE * 10.5, BOARD_OFFSET_Y + CELL_SIZE * 10.5), (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 10.5), (BOARD_OFFSET_X + CELL_SIZE * 10.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5), (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 12.5)],
+    'green': [(BOARD_OFFSET_X + CELL_SIZE * 10.5, BOARD_OFFSET_Y + CELL_SIZE * 1.5), (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 1.5), (BOARD_OFFSET_X + CELL_SIZE * 10.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5), (BOARD_OFFSET_X + CELL_SIZE * 12.5, BOARD_OFFSET_Y + CELL_SIZE * 3.5)]
+}
+
+# Posiciones de meta (centro)
+CENTER_POSITIONS = {
+    'red':   (BOARD_OFFSET_X + CELL_SIZE * 7, BOARD_OFFSET_Y + CELL_SIZE * 6),
+    'blue':  (BOARD_OFFSET_X + CELL_SIZE * 6, BOARD_OFFSET_Y + CELL_SIZE * 7),
+    'yellow':(BOARD_OFFSET_X + CELL_SIZE * 7, BOARD_OFFSET_Y + CELL_SIZE * 8),
+    'green': (BOARD_OFFSET_X + CELL_SIZE * 8, BOARD_OFFSET_Y + CELL_SIZE * 7)
 }
 
 # Zonas seguras (casillas con estrella)
@@ -141,26 +163,6 @@ def generate_board_path():
     
     return path
 
-# Caminos de entrada a casa para cada color
-def generate_home_paths():
-    """Genera los caminos de entrada a casa para cada color"""
-    x = BOARD_OFFSET_X
-    y = BOARD_OFFSET_Y
-    offset = CELL_SIZE // 2
-    
-    home_paths = {
-        # Camino rojo: columna central izquierda hacia arriba
-        "red": [(x + CELL_SIZE * 7 + offset, y + CELL_SIZE * (13 - i) + offset) for i in range(6)],
-        # Camino verde: fila central superior hacia la derecha
-        "green": [(x + CELL_SIZE * (1 + i) + offset, y + CELL_SIZE * 7 + offset) for i in range(6)],
-        # Camino amarillo: columna central derecha hacia abajo
-        "yellow": [(x + CELL_SIZE * 7 + offset, y + CELL_SIZE * (1 + i) + offset) for i in range(6)],
-        # Camino azul: fila central inferior hacia la izquierda
-        "blue": [(x + CELL_SIZE * (13 - i) + offset, y + CELL_SIZE * 7 + offset) for i in range(6)]
-    }
-    
-    return home_paths
-
 # Posiciones de inicio en el camino principal
 START_POSITIONS = {
     "red": 0,    # Empieza en la primera casilla del camino (columna izquierda abajo)
@@ -170,178 +172,124 @@ START_POSITIONS = {
 }
 
 class Piece:
-    """Representa una ficha del juego"""
+    """Ficha de Ludo con lógica de movimiento idéntica a ludo_pupu.py"""
     def __init__(self, color: str, index: int):
         self.color = color
         self.index = index
-        self.position = -1  # -1 significa en casa
-        self.is_home = True
-        self.is_safe = False
+        self.position = -1  # -1: en casa, 0-51: recorrido, 100-106: home
         self.has_finished = False
-        self.path_position = 0
-        self.home_path_position = -1
-        self.on_home_path = False
-        self.animation_offset = (0, 0)
-        self.is_animating = False
-        
-        # Cargar imagen de la ficha
-        piece_size = int(CELL_SIZE * 0.6)  # Las fichas son 60% del tamaño de la casilla
+        self.image = None
+        piece_size = int(CELL_SIZE * 0.6)
         try:
             image_path = f"Icons/Ficha {self._get_spanish_color()}.png"
             self.image = pygame.image.load(image_path)
             self.image = pygame.transform.scale(self.image, (piece_size, piece_size))
         except:
-            # Si no se puede cargar la imagen, usar un círculo
             self.image = pygame.Surface((piece_size, piece_size), pygame.SRCALPHA)
             radius = piece_size // 2
             pygame.draw.circle(self.image, self._get_pygame_color(), (radius, radius), radius - 2)
             pygame.draw.circle(self.image, BLACK, (radius, radius), radius - 2, 2)
-        
         self.rect = self.image.get_rect()
         self.update_position()
-    
+
     def _get_spanish_color(self):
-        """Convierte el color a español para cargar las imágenes"""
-        colors = {
-            "red": "Roja",
-            "green": "Verde",
-            "blue": "Azul",
-            "yellow": "Amarilla"
-        }
-        return colors.get(self.color, "Roja")
-    
+        colors = {'red': 'Roja', 'green': 'Verde', 'blue': 'Azul', 'yellow': 'Amarilla'}
+        return colors.get(self.color, 'Roja')
+
     def _get_pygame_color(self):
-        """Obtiene el color para pygame"""
-        colors = {
-            "red": RED,
-            "green": GREEN,
-            "blue": BLUE,
-            "yellow": YELLOW
-        }
+        colors = {'red': RED, 'green': GREEN, 'blue': BLUE, 'yellow': YELLOW}
         return colors.get(self.color, RED)
-    
+
     def update_position(self):
-        """Actualiza la posición visual de la ficha"""
-        if self.is_home:
-            # Posición en casa
+        # Posiciones de inicio (casas)
+        if self.position == -1:
             pos = HOME_POSITIONS[self.color][self.index]
             self.rect.center = pos
-        elif self.has_finished:
-            # En el centro (meta)
-            center_x = BOARD_OFFSET_X + BOARD_SIZE // 2
-            center_y = BOARD_OFFSET_Y + BOARD_SIZE // 2
-            offset = 20
-            if self.color == "red":
-                self.rect.center = (center_x - offset, center_y - offset)
-            elif self.color == "green":
-                self.rect.center = (center_x + offset, center_y - offset)
-            elif self.color == "yellow":
-                self.rect.center = (center_x + offset, center_y + offset)
-            else:  # blue
-                self.rect.center = (center_x - offset, center_y + offset)
-        elif self.on_home_path:
-            # En el camino de casa
-            if 0 <= self.home_path_position < len(HOME_PATHS[self.color]):
-                self.rect.center = HOME_PATHS[self.color][self.home_path_position]
+        elif self.position >= 100:
+            # Camino a meta
+            home_idx = self.position - 100
+            if 0 <= home_idx < 6:
+                self.rect.center = HOME_PATHS[self.color][home_idx]
+            else:
+                self.rect.center = CENTER_POSITIONS[self.color]
         else:
-            # En el camino principal
-            if 0 <= self.path_position < len(MAIN_PATH):
-                self.rect.center = MAIN_PATH[self.path_position]
-        
-        # Aplicar offset de animación si está animando
-        if self.is_animating:
-            self.rect.x += self.animation_offset[0]
-            self.rect.y += self.animation_offset[1]
-    
-    def can_move(self, steps: int) -> bool:
-        """Verifica si la ficha puede moverse"""
+            # Recorrido principal
+            path_idx = (START_POSITIONS[self.color] + self.position) % 52
+            self.rect.center = MAIN_PATH[path_idx]
+
+    def can_move(self, steps: int, all_pieces=None) -> bool:
         if self.has_finished:
             return False
-        
-        if self.is_home:
-            return steps == 6  # Solo puede salir con un 6
-        
-        if self.on_home_path:
-            # Verificar si puede moverse en el camino de casa
-            new_position = self.home_path_position + steps
-            return new_position <= 5  # No puede pasarse de la meta
-        else:
-            # En el camino principal
-            # Calcular si llegará al camino de casa
-            current_lap_position = self.path_position
-            
-            # Calcular la posición de entrada a casa
-            home_entrance = START_POSITIONS[self.color] + 50
-            if home_entrance >= 52:
-                home_entrance -= 52
-            
-            # Si está antes de la entrada y pasará por ella
-            if current_lap_position < home_entrance:
-                new_position = current_lap_position + steps
-                if new_position > home_entrance:
-                    # Entrará al camino de casa
-                    steps_to_entrance = home_entrance - current_lap_position
-                    remaining_steps = steps - steps_to_entrance
-                    return remaining_steps <= 6
-            
-            return True
-    
-    def move(self, steps: int):
-        """Mueve la ficha"""
-        if self.is_home and steps == 6:
-            self.is_home = False
-            self.path_position = START_POSITIONS[self.color]
-            self.is_safe = self.path_position in SAFE_POSITIONS
-        elif not self.is_home and not self.has_finished:
-            if self.on_home_path:
-                # Mover en el camino de casa
-                self.home_path_position += steps
-                if self.home_path_position == 5:
-                    self.has_finished = True
-            else:
-                # Mover en el camino principal
-                home_entrance = START_POSITIONS[self.color] + 50
-                if home_entrance >= 52:
-                    home_entrance -= 52
-                
-                # Verificar si entrará al camino de casa
-                if self.path_position < home_entrance:
-                    new_position = self.path_position + steps
-                    if new_position >= home_entrance:
-                        # Entrar al camino de casa
-                        steps_to_entrance = home_entrance - self.path_position
-                        remaining_steps = steps - steps_to_entrance
-                        self.on_home_path = True
-                        self.home_path_position = remaining_steps - 1
-                        if self.home_path_position == 5:
-                            self.has_finished = True
-                    else:
-                        self.path_position = new_position % 52
-                        self.is_safe = self.path_position in SAFE_POSITIONS
+        if self.position == -1:
+            return steps == 6
+        # Llegada exacta a meta
+        if self.position >= 100:
+            return self.position + steps <= 106
+        # Bloqueo: no puedes mover si tu destino tiene 2+ fichas propias
+        if all_pieces is not None:
+            dest = self.position + steps
+            if dest < 52:
+                count = sum(1 for p in all_pieces if p.color == self.color and p.position == dest and not p.has_finished)
+                if count >= 2:
+                    return False
+            elif dest >= 100:
+                home_idx = dest - 100
+                count = sum(1 for p in all_pieces if p.color == self.color and p.position == dest and not p.has_finished)
+                if count >= 2:
+                    return False
+        return True
+
+    def move(self, steps: int, all_pieces=None, animate_cb=None, screen=None, clock=None):
+        # Movimiento animado paso a paso
+        if self.position == -1 and steps == 6:
+            self.position = 0
+            self.update_position()
+            if animate_cb: animate_cb()
+            return
+        elif self.position >= 0 and self.position < 52:
+            for _ in range(steps):
+                if self.position == self._entry_to_home():
+                    self.position = 100
+                    self.update_position()
+                    if animate_cb: animate_cb()
+                    if screen and clock:
+                        self._draw_and_wait(screen, clock)
+                    break
                 else:
-                    # Movimiento normal
-                    self.path_position = (self.path_position + steps) % 52
-                    self.is_safe = self.path_position in SAFE_POSITIONS
-        
+                    self.position += 1
+                    if self.position == 52:
+                        self.position = 0
+                    self.update_position()
+                    if animate_cb: animate_cb()
+                    if screen and clock:
+                        self._draw_and_wait(screen, clock)
+        elif self.position >= 100 and self.position < 106:
+            for _ in range(steps):
+                if self.position < 106:
+                    self.position += 1
+                    self.update_position()
+                    if animate_cb: animate_cb()
+                    if screen and clock:
+                        self._draw_and_wait(screen, clock)
+            if self.position == 106:
+                self.has_finished = True
         self.update_position()
-    
-    def send_home(self):
-        """Envía la ficha de vuelta a casa"""
-        self.is_home = True
-        self.path_position = 0
-        self.home_path_position = -1
-        self.on_home_path = False
-        self.is_safe = True
-        self.update_position()
-    
+
+    def _draw_and_wait(self, screen, clock):
+        # Dibuja la ficha y espera un poco para animación
+        pygame.event.pump()
+        screen.fill((240, 240, 240))
+        # Redibuja tablero y fichas (llama a draw_game externo)
+        # Esto se debe pasar como callback desde LudoGame
+        pygame.display.flip()
+        clock.tick(10)
+
+    def _entry_to_home(self):
+        # Casilla de entrada a home para cada color
+        return { 'red': 51, 'green': 12, 'yellow': 25, 'blue': 38 }[self.color ]
+
     def draw(self, screen: pygame.Surface):
-        """Dibuja la ficha"""
         screen.blit(self.image, self.rect)
-        
-        # Dibujar un pequeño círculo si está en una posición segura
-        if self.is_safe and not self.is_home and not self.has_finished:
-            pygame.draw.circle(screen, WHITE, self.rect.center, 8)
-            pygame.draw.circle(screen, BLACK, self.rect.center, 8, 2)
 
 class Dice:
     """Representa el dado del juego"""
@@ -456,11 +404,11 @@ class Player:
         """Actualiza el contador de fichas terminadas"""
         self.finished_pieces = sum(1 for piece in self.pieces if piece.has_finished)
     
-    def get_movable_pieces(self, dice_value: int) -> List[Piece]:
-        """Obtiene las fichas que pueden moverse"""
+    def get_movable_pieces(self, dice_value: int, all_pieces=None) -> List[Piece]:
+        """Obtiene las fichas que pueden moverse, considerando bloqueos"""
         movable = []
         for piece in self.pieces:
-            if piece.can_move(dice_value):
+            if piece.can_move(dice_value, all_pieces):
                 movable.append(piece)
         return movable
     
@@ -507,18 +455,18 @@ class Player:
                 score += 50 + piece.home_path_position * 10
             else:
                 # Calcular distancia a la meta
-                distance_to_home = 50 - piece.path_position
+                distance_to_home = 50 - piece.position
                 if distance_to_home < 0:
                     distance_to_home += 52
                 score += (52 - distance_to_home)
             
             # Bonus por capturar oponentes
-            future_position = (piece.path_position + 6) % 52
+            future_position = (piece.position + 6) % 52
             for player in all_players:
                 if player.color != self.color:
                     for enemy_piece in player.pieces:
                         if (not enemy_piece.is_home and not enemy_piece.has_finished and 
-                            not enemy_piece.on_home_path and enemy_piece.path_position == future_position and
+                            not enemy_piece.on_home_path and enemy_piece.position == future_position and
                             not enemy_piece.is_safe):
                             score += 100  # Gran bonus por capturar
             
@@ -528,7 +476,7 @@ class Player:
                     if player.color != self.color:
                         for enemy_piece in player.pieces:
                             if not enemy_piece.is_home and not enemy_piece.has_finished:
-                                distance = enemy_piece.path_position - piece.path_position
+                                distance = enemy_piece.position - piece.position
                                 if 0 < distance <= 6:
                                     score -= 20  # Penalización por estar en peligro
             
@@ -541,193 +489,68 @@ class Player:
 class Board:
     """Representa el tablero del juego"""
     def __init__(self):
-        # Siempre crear el tablero programáticamente
         self.image = self._create_detailed_board()
         self.rect = self.image.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
     
     def _create_detailed_board(self) -> pygame.Surface:
-        """Crea un tablero detallado de Ludo"""
-        surface = pygame.Surface((BOARD_SIZE, BOARD_SIZE))
-        surface.fill((250, 248, 240))  # Fondo beige claro
-        
-        # Configuración
-        house_size = CELL_SIZE * 6
-        
-        # Dibujar todas las casillas del tablero primero
-        for i in range(15):
-            for j in range(15):
-                rect = pygame.Rect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-                pygame.draw.rect(surface, BLACK, rect, 1)
-        
-        # Dibujar las zonas de casa
-        # Casa roja (arriba izquierda)
-        pygame.draw.rect(surface, RED, (0, 0, house_size, house_size))
-        pygame.draw.rect(surface, WHITE, (CELL_SIZE, CELL_SIZE, house_size - CELL_SIZE * 2, house_size - CELL_SIZE * 2))
-        
-        # Casa verde (arriba derecha)  
-        pygame.draw.rect(surface, GREEN, (CELL_SIZE * 9, 0, house_size, house_size))
-        pygame.draw.rect(surface, WHITE, (CELL_SIZE * 10, CELL_SIZE, house_size - CELL_SIZE * 2, house_size - CELL_SIZE * 2))
-        
-        # Casa azul (abajo izquierda)
-        pygame.draw.rect(surface, BLUE, (0, CELL_SIZE * 9, house_size, house_size))
-        pygame.draw.rect(surface, WHITE, (CELL_SIZE, CELL_SIZE * 10, house_size - CELL_SIZE * 2, house_size - CELL_SIZE * 2))
-        
-        # Casa amarilla (abajo derecha)
-        pygame.draw.rect(surface, YELLOW, (CELL_SIZE * 9, CELL_SIZE * 9, house_size, house_size))
-        pygame.draw.rect(surface, WHITE, (CELL_SIZE * 10, CELL_SIZE * 10, house_size - CELL_SIZE * 2, house_size - CELL_SIZE * 2))
-        
-        # Dibujar círculos en las posiciones de inicio dentro de las casas
-        for color, positions in HOME_POSITIONS.items():
-            for pos in positions:
-                x, y = pos[0] - BOARD_OFFSET_X, pos[1] - BOARD_OFFSET_Y
-                pygame.draw.circle(surface, GRAY, (int(x), int(y)), CELL_SIZE // 3)
-                pygame.draw.circle(surface, BLACK, (int(x), int(y)), CELL_SIZE // 3, 2)
-        
-        # Dibujar los caminos de casa (las zonas coloreadas centrales)
-        # Camino rojo (columna central hacia arriba)
+        surface = pygame.Surface((CELL_SIZE * 15, CELL_SIZE * 15))
+        surface.fill((0, 150, 0))  # Fondo verde clásico
+        # --- Casas de colores (esquinas) ---
+        pygame.draw.rect(surface, RED, (0, 0, CELL_SIZE * 6, CELL_SIZE * 6))
+        pygame.draw.rect(surface, GREEN, (CELL_SIZE * 9, 0, CELL_SIZE * 6, CELL_SIZE * 6))
+        pygame.draw.rect(surface, YELLOW, (CELL_SIZE * 9, CELL_SIZE * 9, CELL_SIZE * 6, CELL_SIZE * 6))
+        pygame.draw.rect(surface, BLUE, (0, CELL_SIZE * 9, CELL_SIZE * 6, CELL_SIZE * 6))
+        # --- Caminos principales (blancos) ---
         for i in range(6):
-            rect = pygame.Rect(CELL_SIZE * 7, CELL_SIZE * (1 + i), CELL_SIZE, CELL_SIZE)
-            color = RED if i < 5 else WHITE  # La última es blanca (meta)
-            pygame.draw.rect(surface, color, rect)
-            pygame.draw.rect(surface, BLACK, rect, 2)
-        
-        # Camino verde (fila central hacia la derecha)
-        for i in range(6):
-            rect = pygame.Rect(CELL_SIZE * (8 + i), CELL_SIZE * 7, CELL_SIZE, CELL_SIZE)
-            color = GREEN if i < 5 else WHITE
-            pygame.draw.rect(surface, color, rect)
-            pygame.draw.rect(surface, BLACK, rect, 2)
-        
-        # Camino amarillo (columna central hacia abajo)
-        for i in range(6):
-            rect = pygame.Rect(CELL_SIZE * 7, CELL_SIZE * (8 + i), CELL_SIZE, CELL_SIZE)
-            color = YELLOW if i < 5 else WHITE
-            pygame.draw.rect(surface, color, rect)
-            pygame.draw.rect(surface, BLACK, rect, 2)
-        
-        # Camino azul (fila central hacia la izquierda)
-        for i in range(6):
-            rect = pygame.Rect(CELL_SIZE * (6 - i), CELL_SIZE * 7, CELL_SIZE, CELL_SIZE)
-            color = BLUE if i < 5 else WHITE
-            pygame.draw.rect(surface, color, rect)
-            pygame.draw.rect(surface, BLACK, rect, 2)
-        
-        # Dibujar el centro (meta)
-        center_rect = pygame.Rect(CELL_SIZE * 6, CELL_SIZE * 6, CELL_SIZE * 3, CELL_SIZE * 3)
-        pygame.draw.rect(surface, BLACK, center_rect, 3)
-        
-        # Triángulos en el centro
-        center = BOARD_SIZE // 2
-        
-        # Triángulo rojo
-        points = [(center - CELL_SIZE, center), (center, center - CELL_SIZE), (center, center)]
-        pygame.draw.polygon(surface, RED, points)
-        pygame.draw.polygon(surface, BLACK, points, 2)
-        
-        # Triángulo verde
-        points = [(center, center - CELL_SIZE), (center + CELL_SIZE, center), (center, center)]
-        pygame.draw.polygon(surface, GREEN, points)
-        pygame.draw.polygon(surface, BLACK, points, 2)
-        
-        # Triángulo amarillo
-        points = [(center + CELL_SIZE, center), (center, center + CELL_SIZE), (center, center)]
-        pygame.draw.polygon(surface, YELLOW, points)
-        pygame.draw.polygon(surface, BLACK, points, 2)
-        
-        # Triángulo azul
-        points = [(center, center + CELL_SIZE), (center - CELL_SIZE, center), (center, center)]
-        pygame.draw.polygon(surface, BLUE, points)
-        pygame.draw.polygon(surface, BLACK, points, 2)
-        
-        # Marcar las casillas de inicio con flechas
-        # Inicio rojo (sale hacia la izquierda)
-        start_rect = pygame.Rect(CELL_SIZE * 6, CELL_SIZE * 8, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, RED, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "up", WHITE)
-        
-        # Inicio verde (sale hacia abajo)
-        start_rect = pygame.Rect(CELL_SIZE * 8, CELL_SIZE * 6, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, GREEN, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "right", WHITE)
-        
-        # Inicio amarillo (sale hacia la derecha)
-        start_rect = pygame.Rect(CELL_SIZE * 8, CELL_SIZE * 8, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, YELLOW, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "down", WHITE)
-        
-        # Inicio azul (sale hacia arriba)
-        start_rect = pygame.Rect(CELL_SIZE * 6, CELL_SIZE * 6, CELL_SIZE, CELL_SIZE)
-        pygame.draw.rect(surface, BLUE, start_rect)
-        pygame.draw.rect(surface, BLACK, start_rect, 3)
-        self._draw_arrow(surface, start_rect.centerx, start_rect.centery, "left", WHITE)
-        
-        # Marcar las casillas seguras con estrellas
-        # Estas deben coincidir con las posiciones del camino
-        global MAIN_PATH
-        if MAIN_PATH:  # Solo si el camino ya ha sido generado
-            for i, pos in enumerate(SAFE_POSITIONS):
-                if pos < len(MAIN_PATH):
-                    x, y = MAIN_PATH[pos]
-                    x -= BOARD_OFFSET_X
-                    y -= BOARD_OFFSET_Y
-                    # Dibujar estrella en la casilla
-                    pygame.draw.rect(surface, (255, 255, 200), (x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE))
-                    pygame.draw.rect(surface, BLACK, (x - CELL_SIZE // 2, y - CELL_SIZE // 2, CELL_SIZE, CELL_SIZE), 1)
-                    self._draw_star(surface, x, y, 15, GRAY)
-        
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * 6, CELL_SIZE * i, CELL_SIZE, CELL_SIZE))  # Arriba
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * (i + 9), CELL_SIZE * 6, CELL_SIZE, CELL_SIZE))  # Derecha
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * 8, CELL_SIZE * (i + 9), CELL_SIZE, CELL_SIZE))  # Abajo
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * i, CELL_SIZE * 8, CELL_SIZE, CELL_SIZE))  # Izquierda
+        for i in range(1, 6):
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * (6 - i), CELL_SIZE * 6, CELL_SIZE, CELL_SIZE))  # Arriba izq
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * 8, CELL_SIZE * (6 - i), CELL_SIZE, CELL_SIZE))  # Derecha arriba
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * (14 - i), CELL_SIZE * 8, CELL_SIZE, CELL_SIZE))  # Abajo der
+            pygame.draw.rect(surface, WHITE, (CELL_SIZE * 6, CELL_SIZE * (14 - i), CELL_SIZE, CELL_SIZE))  # Izq abajo
+        # --- Caminos de entrada a meta (color) ---
+        for i in range(1, 6):
+            pygame.draw.rect(surface, RED, (CELL_SIZE * (6 + i), CELL_SIZE * 7, CELL_SIZE, CELL_SIZE))  # Rojo
+            pygame.draw.rect(surface, GREEN, (CELL_SIZE * 7, CELL_SIZE * (6 - i), CELL_SIZE, CELL_SIZE))  # Verde
+            pygame.draw.rect(surface, YELLOW, (CELL_SIZE * (8 - i), CELL_SIZE * 7, CELL_SIZE, CELL_SIZE))  # Amarillo
+            pygame.draw.rect(surface, BLUE, (CELL_SIZE * 7, CELL_SIZE * (8 + i), CELL_SIZE, CELL_SIZE))  # Azul
+        # --- Centro (4 triángulos de colores) ---
+        center = (CELL_SIZE * 7.5, CELL_SIZE * 7.5)
+        pygame.draw.polygon(surface, RED, [center, (CELL_SIZE * 6, CELL_SIZE * 6), (CELL_SIZE * 9, CELL_SIZE * 6)])
+        pygame.draw.polygon(surface, GREEN, [center, (CELL_SIZE * 9, CELL_SIZE * 6), (CELL_SIZE * 9, CELL_SIZE * 9)])
+        pygame.draw.polygon(surface, YELLOW, [center, (CELL_SIZE * 9, CELL_SIZE * 9), (CELL_SIZE * 6, CELL_SIZE * 9)])
+        pygame.draw.polygon(surface, BLUE, [center, (CELL_SIZE * 6, CELL_SIZE * 9), (CELL_SIZE * 6, CELL_SIZE * 6)])
+        pygame.draw.circle(surface, WHITE, (int(center[0]), int(center[1])), int(CELL_SIZE * 1.2))
+        # --- Zonas seguras (estrellas) ---
+        safe_coords = [  # Coordenadas aproximadas de las estrellas
+            (CELL_SIZE * 6, CELL_SIZE * 2), (CELL_SIZE * 8, CELL_SIZE * 6), (CELL_SIZE * 12, CELL_SIZE * 6),
+            (CELL_SIZE * 8, CELL_SIZE * 8), (CELL_SIZE * 6, CELL_SIZE * 12), (CELL_SIZE * 2, CELL_SIZE * 8),
+            (CELL_SIZE * 6, CELL_SIZE * 8), (CELL_SIZE * 8, CELL_SIZE * 2)
+        ]
+        for coord in safe_coords:
+            pygame.draw.circle(surface, (255, 215, 0), (int(coord[0] + CELL_SIZE // 2), int(coord[1] + CELL_SIZE // 2)), 12)
+            pygame.draw.circle(surface, BLACK, (int(coord[0] + CELL_SIZE // 2), int(coord[1] + CELL_SIZE // 2)), 12, 2)
+        # --- Casas de inicio (círculos grandes en las esquinas) ---
+        home_coords = [
+            (CELL_SIZE * 1.5, CELL_SIZE * 1.5, RED),
+            (CELL_SIZE * 13.5, CELL_SIZE * 1.5, GREEN),
+            (CELL_SIZE * 13.5, CELL_SIZE * 13.5, YELLOW),
+            (CELL_SIZE * 1.5, CELL_SIZE * 13.5, BLUE)
+        ]
+        for x, y, color in home_coords:
+            pygame.draw.circle(surface, color, (int(x), int(y)), int(CELL_SIZE * 2.2))
+            pygame.draw.circle(surface, WHITE, (int(x), int(y)), int(CELL_SIZE * 2.2), 4)
+        # --- Líneas de cuadrícula ---
+        for i in range(16):
+            pygame.draw.line(surface, BLACK, (0, CELL_SIZE * i), (CELL_SIZE * 15, CELL_SIZE * i), 2)
+            pygame.draw.line(surface, BLACK, (CELL_SIZE * i, 0), (CELL_SIZE * i, CELL_SIZE * 15), 2)
         return surface
     
-    def _draw_star(self, surface, x, y, size, color):
-        """Dibuja una estrella en la superficie"""
-        angle = -math.pi / 2
-        points = []
-        for i in range(10):
-            r = size if i % 2 == 0 else size // 2
-            px = x + r * math.cos(angle)
-            py = y + r * math.sin(angle)
-            points.append((px, py))
-            angle += math.pi / 5
-        pygame.draw.polygon(surface, color, points)
-        pygame.draw.polygon(surface, BLACK, points, 1)
-    
-    def _draw_arrow(self, surface, x, y, direction, color):
-        """Dibuja una flecha en la dirección especificada"""
-        arrow_size = CELL_SIZE // 3
-        
-        if direction == "up":
-            points = [
-                (x, y - arrow_size),
-                (x - arrow_size // 2, y + arrow_size // 2),
-                (x + arrow_size // 2, y + arrow_size // 2)
-            ]
-        elif direction == "down":
-            points = [
-                (x, y + arrow_size),
-                (x - arrow_size // 2, y - arrow_size // 2),
-                (x + arrow_size // 2, y - arrow_size // 2)
-            ]
-        elif direction == "left":
-            points = [
-                (x - arrow_size, y),
-                (x + arrow_size // 2, y - arrow_size // 2),
-                (x + arrow_size // 2, y + arrow_size // 2)
-            ]
-        elif direction == "right":
-            points = [
-                (x + arrow_size, y),
-                (x - arrow_size // 2, y - arrow_size // 2),
-                (x - arrow_size // 2, y + arrow_size // 2)
-            ]
-        
-        pygame.draw.polygon(surface, color, points)
-        pygame.draw.polygon(surface, BLACK, points, 2)
-    
     def draw(self, screen: pygame.Surface):
-        """Dibuja el tablero"""
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, (BOARD_OFFSET_X, BOARD_OFFSET_Y))
 
 class LudoGame:
     """Clase principal del juego"""
@@ -736,11 +559,6 @@ class LudoGame:
         pygame.display.set_caption("Ludo - Juego Interactivo")
         pygame.display.set_icon(pygame.Surface((32, 32)))  # Icono vacío por ahora
         self.clock = pygame.time.Clock()
-        
-        # Generar los caminos del tablero
-        global MAIN_PATH, HOME_PATHS
-        MAIN_PATH = generate_board_path()
-        HOME_PATHS = generate_home_paths()
         
         # Componentes del juego
         self.board = Board()
@@ -823,18 +641,23 @@ class LudoGame:
                     self.start_game(4, vs_ai=True)
     
     def check_captures(self, piece: Piece):
-        """Verifica si una ficha captura a otra"""
-        if piece.is_safe or piece.on_home_path:
-            return
-        
+        """Verifica si una ficha captura a otra y permite volver a tirar si captura"""
+        if piece.position in SAFE_POSITIONS:
+            return False
+        captured = False
         for player in self.players:
             if player.color != piece.color:
                 for enemy_piece in player.pieces:
-                    if (not enemy_piece.is_home and not enemy_piece.has_finished and 
-                        not enemy_piece.on_home_path and not enemy_piece.is_safe and
-                        enemy_piece.path_position == piece.path_position):
-                        enemy_piece.send_home()
-                        self.add_message(f"¡{piece.color} captura a {enemy_piece.color}!", 2000)
+                    if (enemy_piece.position == piece.position and not enemy_piece.has_finished and enemy_piece.position >= 0 and enemy_piece.position < 106):
+                        # Bloqueo: no capturas si hay 2+ fichas enemigas
+                        count = sum(1 for p in player.pieces if p.position == piece.position and not p.has_finished)
+                        if count == 1:
+                            enemy_piece.position = -1
+                            enemy_piece.has_finished = False
+                            enemy_piece.update_position()
+                            self.add_message(f"¡{piece.color} captura a {enemy_piece.color}!", 2000)
+                            captured = True
+        return captured
     
     def handle_game_click(self, pos: Tuple[int, int]):
         """Maneja los clicks durante el juego"""
@@ -854,38 +677,30 @@ class LudoGame:
         
         # Click en una ficha
         if not current_player.can_roll and not current_player.has_moved and not current_player.is_ai:
-            movable_pieces = current_player.get_movable_pieces(self.dice.value)
-            
+            all_pieces = [p for pl in self.players for p in pl.pieces]
+            movable_pieces = current_player.get_movable_pieces(self.dice.value, all_pieces)
             for piece in movable_pieces:
                 if piece.rect.collidepoint(pos):
-                    old_position = piece.path_position
-                    piece.move(self.dice.value)
+                    old_position = piece.position
+                    # Movimiento animado paso a paso
+                    piece.move(self.dice.value, all_pieces, animate_cb=self.draw, screen=self.screen, clock=self.clock)
                     current_player.has_moved = True
-                    
-                    # Verificar capturas
-                    self.check_captures(piece)
-                    
-                    # Actualizar fichas terminadas
+                    captured = self.check_captures(piece)
                     current_player.update_finished_pieces()
-                    
-                    # Verificar si ganó
                     if current_player.check_winner():
                         self.winner = current_player
                         self.state = GameState.GAME_OVER
                         self.add_message(f"¡{current_player.name} ha ganado!", 5000)
                     else:
-                        # Siguiente turno
-                        if self.dice.value == 6:
+                        if captured or self.dice.value == 6:
                             current_player.consecutive_sixes += 1
                             if current_player.consecutive_sixes >= 3:
-                                # Tres 6 seguidos, pierde el turno
                                 self.add_message("¡Tres 6 seguidos! Pierdes el turno", 2000)
                                 self.next_turn()
                             else:
-                                # Puede tirar de nuevo
                                 current_player.can_roll = True
                                 current_player.has_moved = False
-                                self.add_message("¡Sacaste un 6! Tira de nuevo", 1500)
+                                self.add_message("¡Tira de nuevo!", 1500)
                         else:
                             current_player.consecutive_sixes = 0
                             self.next_turn()
