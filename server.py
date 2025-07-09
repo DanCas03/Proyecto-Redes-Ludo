@@ -266,11 +266,10 @@ class LudoServer:
     def __init__(self, host='localhost', port=9999):
         self.host = host
         self.port = port
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind((self.host, self.port))
-        self.server_socket.listen(8)
-        print(f"Servidor escuchando en {self.host}:{self.port}")
+        self.server_socket = None
+        self.accept_thread = None
+        self.running = False
+        self._init_server()
         self.users = load_users()  # {username: {password, nombre, apellido}}
         self.clients = {}  # {username: (socket, thread)}
         self.lock = threading.Lock()
@@ -281,18 +280,86 @@ class LudoServer:
         self.last_dice_roll = None
         self.board = None
 
-    def start(self):
-        threading.Thread(target=self.accept_clients, daemon=True).start()
+    def _init_server(self):
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server_socket.bind((self.host, self.port))
+        self.server_socket.listen(8)
+        print(f"Servidor escuchando en {self.host}:{self.port}")
+
+    def start(self, with_input=True):
+        self.running = True
+        if self.accept_thread is None or not self.accept_thread.is_alive():
+            self.accept_thread = threading.Thread(target=self.accept_clients, daemon=True)
+            self.accept_thread.start()
         print("Servidor iniciado. Esperando conexiones...")
-        while True:
-            cmd = input("[ADMIN] > ").strip()
-            if cmd == 'usuarios':
-                print(self.users)
-            elif cmd == 'salir':
-                print("Cerrando servidor...")
-                break
-            # Aquí puedes agregar comandos de admin
-        self.server_socket.close()
+        if with_input:
+            while self.running:
+                cmd = input("[ADMIN] > ").strip()
+                if cmd == 'usuarios':
+                    print(self.users)
+                elif cmd == 'salir':
+                    print("Cerrando servidor...")
+                    self.stop_server()
+                    break
+        else:
+            while self.running:
+                import time
+                time.sleep(1)
+        try:
+            self.server_socket.close()
+        except:
+            pass
+
+    def start_in_thread(self):
+        if not self.running:
+            # Si el socket fue cerrado, re-crear
+            self._init_server()
+            self.running = True
+            self.accept_thread = threading.Thread(target=self.start, args=(False,), daemon=True)
+            self.accept_thread.start()
+
+    def stop_server(self):
+        self.running = False
+        # Desbloquear el accept() con una conexión dummy
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((self.host, self.port))
+        except Exception:
+            pass
+        try:
+            self.server_socket.close()
+        except:
+            pass
+        self.accept_thread = None
+        # Limpiar estado de clientes y partida
+        with self.lock:
+            for user, (sock, _) in list(self.clients.items()):
+                try:
+                    sock.close()
+                except:
+                    pass
+            self.clients.clear()
+            self.player_order.clear()
+            self.player_colors.clear()
+            self.current_turn_idx = 0
+            self.last_dice_roll = None
+            self.board = None
+        print("Servidor detenido.")
+
+    def get_connected_users(self):
+        with self.lock:
+            return list(self.clients.keys())
+
+    def get_stats(self):
+        with self.lock:
+            stats = {
+                'usuarios_registrados': len(self.users),
+                'usuarios_conectados': len(self.clients),
+                'partida_en_curso': self.board is not None,
+                'jugadores_partida': list(self.player_order) if self.board else [],
+            }
+            return stats
 
     def accept_clients(self):
         while True:
